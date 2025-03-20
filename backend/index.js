@@ -3,6 +3,7 @@ import {PORT,mongoDBURL} from "./config.js";
 import mongoose from "mongoose";
 import cors from 'cors';
 import driversRouter from './routes/driverRoutes.js'
+import userRouter from './routes/userRoutes.js'
 
 const app= express();
 
@@ -15,6 +16,7 @@ app.get('/',(request,response)=>{
 })
 
 app.use('/drivers',driversRouter);
+app.use('/user',userRouter);
 
 
 mongoose.connect(mongoDBURL)

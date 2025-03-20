@@ -1,91 +1,83 @@
 import express from 'express';
 import { Driver } from '../models/driverModel.js';
+
 const router = express.Router();
 
-router.post('/',async(request,response)=>{
-    try{
-        if(
-            !request.body.name||
-            !request.body.location
-        ){
-            return response.status(400).send({
-                message:'Send all required field: name ,location'
-            })
-        }const newDriver={
-            name:request.body.name,
-            location:request.body.location,
+// Register a Driver
+router.post('/register', async (req, res) => {
+    try {
+        const { name, email, password, vehicleCapacity, licenceNumber } = req.body;
+
+        if (!name || !email || !password || !vehicleCapacity || !licenceNumber) {
+            return res.status(400).send({ message: 'Send all required fields' });
         }
-        const driver = await Driver.create(newDriver);
 
-        return response.status(201).send(driver);
-    }catch(error){
+        // Create new driver
+        const driver = new Driver({ name, email, password, vehicleCapacity, licenceNumber });
+        await driver.save();
+
+        res.status(201).json({ message: "Driver registered successfully, pending verification" });
+
+    } catch (error) {
         console.log(error.message);
-        response.status(500).send({message:error.message});
+        res.status(500).send({ message: error.message });
     }
-})
+});
 
-router.get('/',async(request,response)=>{
-    try{
+// Driver Login
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).send({ message: 'Send email and password' });
+        }
+
+        const driver = await Driver.findOne({ email });
+        if (!driver) return res.status(404).send({ message: 'Driver not found' });
+
+        const isMatch = await driver.comparePassword(password);
+        if (!isMatch) return res.status(400).send({ message: 'Invalid credentials' });
+
+        if (!driver.verified) {
+            return res.status(403).send({ message: 'Driver not verified yet' });
+        }
+
+        const token = driver.generateAuthToken();
+        res.status(200).json({ token });
+
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send({ message: error.message });
+    }
+});
+
+// Admin Verification Route
+router.put('/verify/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const driver = await Driver.findById(id);
+        if (!driver) return res.status(404).json({ message: 'Driver not found' });
+
+        driver.verified = true;
+        await driver.save();
+
+        res.status(200).json({ message: 'Driver verified successfully' });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send({ message: error.message });
+    }
+});
+
+// Get All Drivers
+router.get('/', async (req, res) => {
+    try {
         const drivers = await Driver.find({});
-
-        return response.status(200).json(drivers);
-    }catch(error){
+        res.status(200).json(drivers);
+    } catch (error) {
         console.log(error.message);
-        response.status(500).send({message:error.message});
+        res.status(500).send({ message: error.message });
     }
-})
-
-router.get('/:id',async(request,response)=>{
-    try{
-        const {id} = request.params;
-
-        const drivers = await Driver.findById(id);
-
-        return response.status(200).json(drivers);
-    }catch(error){
-        console.log(error.message);
-        response.status(500).send({message:error.message});
-    }
-})
-
-router.put('/:id',async(request,response)=>{
-    try{
-        if(
-            !request.body.name||
-            !request.body.location
-        ){
-            return response.status(400).send({
-                message:'Send all required field: name ,location'
-            })
-        }
-        const {id} = request.params;
-
-        const result = await Driver.findByIdAndUpdate(id,request.body);
-
-        if(!result){
-            return response.status(404).json({message: 'Driver not found'})
-        }
-        return response.status(200).send({message:'Driver update successfully'})
-    }catch(error){
-        console.log(error.message);
-        response.status(500).send({message:error.message});
-    }
-})
-
-router.delete('/:id',async(request,response)=>{
-    try{
-        const {id} = request.params;
-
-        const result = await Driver.findByIdAndDelete(id);
-
-        if(!result){
-            return response.status(404).json({message: 'Driver not found'})
-        }
-        return response.status(200).send({message:'Driver Deleted Successfully'})
-    }catch(error){
-        console.log(error.message);
-        response.status(500).send({message:error.message});
-    }
-})
+});
 
 export default router;
