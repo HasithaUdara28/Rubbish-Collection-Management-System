@@ -1,10 +1,49 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { TruckIcon, ToggleLeftIcon, ToggleRightIcon, CalendarIcon, ClipboardListIcon, CreditCardIcon, UserIcon, BellIcon, LogOut } from 'lucide-react';
 
 const DriverDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isAvailable, setIsAvailable] = useState(false);
+  const [userDetails, setUserDetails] = useState(null);
+  const navigate = useNavigate();
+
+
   
+  useEffect(() => {
+    const token = sessionStorage.getItem("token");
+  
+    if (!token) {
+      // If no token is found, redirect to login
+      navigate("/");
+    } else {
+      try {
+        // Decode the token to extract user details
+        const decodedToken = JSON.parse(atob(token.split(".")[1]));
+        setUserDetails(decodedToken);
+        
+        // Fetch driver data to get current availability status
+        fetch(`http://localhost:5555/drivers/drivers/${decodedToken.id}`)
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    setIsAvailable(data.availability);
+  })
+  .catch(error => {
+    console.error("Error fetching driver details:", error);
+  });
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        navigate("/"); // Redirect to login on error
+      }
+    }
+  }, [navigate]);
+  
+    
   // Sample data
   const upcomingJobs = [
     { id: 1, service: 'Full Truck', date: '2025-03-22', time: '10:00 AM', customer: 'Alex Johnson', address: '123 Main St, Anytown', status: 'Confirmed' },
@@ -16,9 +55,34 @@ const DriverDashboard = () => {
     { id: 102, service: 'Full Truck', date: '2025-04-05', time: 'Morning', address: '321 Pine Rd, Somewhere', details: 'Construction debris removal', estimatedPay: '$100-120' }
   ];
 
-  const handleAvailabilityToggle = () => {
-    setIsAvailable(!isAvailable);
+  const handleAvailabilityToggle = async () => {
+    const newAvailability = !isAvailable;
+    setIsAvailable(newAvailability); // Optimistically update UI
+  
+    try {
+      // Fix the endpoint to match your route definition
+      const response = await fetch(`http://localhost:5555/drivers/drivers/${userDetails.id}/availability`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // Use 'availability' to match your model's property name
+        body: JSON.stringify({ availability: newAvailability }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to update availability");
+      }
+  
+      const data = await response.json();
+      console.log("Availability updated:", data);
+    } catch (error) {
+      console.error("Error updating availability:", error);
+      setIsAvailable(!newAvailability); // Revert if failed
+    }
   };
+
+  
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -29,16 +93,21 @@ const DriverDashboard = () => {
         </div>
         
         <div className="p-4">
+        {userDetails ? (
           <div className="flex items-center mb-6">
             <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
               <UserIcon size={20} className="text-green-600" />
             </div>
+            
             <div className="ml-3">
-              <p className="font-medium">Michael Brown</p>
-              <p className="text-sm text-gray-500">Driver</p>
+              <p className="font-medium">{userDetails.name}</p>
+              <p className="text-sm text-gray-500">{userDetails.email}</p>
             </div>
           </div>
-          
+            ):( <p className="text-xl text-gray-600">Loading user details...</p>
+
+            )
+        }
           <nav className="space-y-1">
             <button 
               onClick={() => setActiveTab('dashboard')}

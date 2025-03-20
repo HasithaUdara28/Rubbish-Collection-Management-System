@@ -9,8 +9,21 @@ const driverSchema = mongoose.Schema(
         password: { type: String, required: true },
         vehicleType: { type: String, required: true },
         licenceNumber: { type: String, required: true },
-        availability:{type:Boolean,default:false},
+        availability: { type: Boolean, default: false },
         verified: { type: Boolean, default: false },
+        
+        // Services the driver can offer
+        services: { 
+            type: [String], 
+            enum: ["Half Truck", "Full Truck", "More Than Truck"],
+            default: [] 
+        },
+
+        // Locations the driver operates in
+        locations: { 
+            type: [String], 
+            default: [] 
+        },
     },
     {
         timestamps: true,
