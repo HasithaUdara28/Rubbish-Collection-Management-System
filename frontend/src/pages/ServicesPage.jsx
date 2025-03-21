@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowLeftIcon, TruckIcon, StarIcon, MapPinIcon, PhoneIcon, UserIcon, FilterIcon, AlertCircleIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../component/Footer';
 import Navbar from '../component/Navbar';
 
 const ServicesPage = () => {
-  const [selectedService, setSelectedService] = useState('Half Truck');
+  const location = useLocation();
+  const initialService = location.state?.selectedService || 'Half Truck';
+  const [selectedService, setSelectedService] = useState(initialService);
   const [availableDrivers, setAvailableDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -62,7 +65,7 @@ const ServicesPage = () => {
           price: `$${driver.services.includes('More Than Truck') ? '170-200' : 
                   driver.services.includes('Full Truck') ? '110-130' : '70-90'}`, // Price based on service
           experience: `${Math.floor(Math.random() * 8) + 1} years`, // Mock experience
-          available: Math.random() > 0.7 ? 'In 30 min' : 'Now' // Mock availability time
+          available: 'Now' // Mock availability time
         }));
         
         setAvailableDrivers(enhancedDrivers);
