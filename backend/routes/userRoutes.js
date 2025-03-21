@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, role } = req.body;
+        const { name, email, password,phone, role } = req.body;
 
         // Validation
         if (!name || !email || !password) {
@@ -15,7 +15,7 @@ router.post('/register', async (req, res) => {
         }
 
         // Create new user
-        const user = new User({ name, email, password, role });
+        const user = new User({ name, email, password,phone, role });
         await user.save();
 
         // Generate token
