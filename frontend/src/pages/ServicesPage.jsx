@@ -1,18 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeftIcon, TruckIcon, StarIcon, MapPinIcon, PhoneIcon, UserIcon, FilterIcon, AlertCircleIcon } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowLeftIcon, TruckIcon, StarIcon, MapPinIcon, PhoneIcon, UserIcon, FilterIcon, AlertCircleIcon, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../component/Footer';
 import Navbar from '../component/Navbar';
+import BookingPopup from '../component/BookingPopup'; // Import the new component
 
 const ServicesPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const initialService = location.state?.selectedService || 'Half Truck';
   const [selectedService, setSelectedService] = useState(initialService);
   const [availableDrivers, setAvailableDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // State for booking popup
+  const [showBookingPopup, setShowBookingPopup] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [bookingSuccess, setBookingSuccess] = useState(false);
+  const [bookingData, setBookingData] = useState(null);
   
   const services = [
     {
@@ -80,9 +88,60 @@ const ServicesPage = () => {
     fetchDrivers();
   }, [selectedService]);
 
+  // Handle booking button click
+  const handleBookNow = (driver) => {
+    // Check if user is logged in using sessionStorage instead of localStorage
+    const token = sessionStorage.getItem('token');
+    if (!token) {
+      // Redirect to login page
+      navigate('/', { 
+        state: { 
+          redirectAfterLogin: '/services',
+          message: 'Please log in to book a driver' 
+        } 
+      });
+      return;
+    }
+    
+    setSelectedDriver(driver);
+    setShowBookingPopup(true);
+  };
+
+  // Handle successful booking
+  const handleBookingSuccess = (data) => {
+    setBookingData(data);
+    setBookingSuccess(true);
+    setShowBookingPopup(false);
+    
+    // You could reset this after a few seconds to allow for more bookings
+    setTimeout(() => {
+      setBookingSuccess(false);
+      setBookingData(null);
+    }, 5000);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar/>
+      
+      {/* Booking Success Message */}
+      {bookingSuccess && (
+        <div className="fixed top-20 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md z-50 max-w-md">
+          <div className="flex">
+            <div className="py-1"><svg className="fill-current h-6 w-6 text-green-500 mr-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M2.93 17.07A10 10 0 1 1 17.07 2.93 10 10 0 0 1 2.93 17.07zm12.73-1.41A8 8 0 1 0 4.34 4.34a8 8 0 0 0 11.32 11.32zM9 11V9h2v6H9v-4zm0-6h2v2H9V5z"/></svg></div>
+            <div>
+              <p className="font-bold">Booking Successful!</p>
+              <p className="text-sm">Your booking has been confirmed. Check your bookings for details.</p>
+            </div>
+            <button 
+              onClick={() => setBookingSuccess(false)} 
+              className="ml-auto text-green-700"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Services Selection */}
@@ -215,7 +274,10 @@ const ServicesPage = () => {
                     <button className="bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-md mr-3">
                       View Profile
                     </button>
-                    <button className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-md">
+                    <button 
+                      className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-md"
+                      onClick={() => handleBookNow(driver)}
+                    >
                       Book Now
                     </button>
                   </div>
@@ -226,6 +288,16 @@ const ServicesPage = () => {
         </div>
       </main>
       <Footer/>
+      
+      {/* Booking Popup */}
+      {showBookingPopup && selectedDriver && (
+        <BookingPopup 
+          driver={selectedDriver}
+          service={selectedService}
+          onClose={() => setShowBookingPopup(false)}
+          onSuccess={handleBookingSuccess}
+        />
+      )}
     </div>
   );
 };

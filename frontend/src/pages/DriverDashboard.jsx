@@ -6,54 +6,138 @@ const DriverDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isAvailable, setIsAvailable] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
+  const [upcomingJobs, setUpcomingJobs] = useState([]);
+  const [availableJobs, setAvailableJobs] = useState([]);
   const navigate = useNavigate();
 
+  // Fetch bookings function to reuse
+  const fetchDriverBookings = () => {
+    const token = sessionStorage.getItem("token");
+    const decodedToken = JSON.parse(atob(token.split(".")[1]));
 
-  
+    fetch(`http://localhost:5555/booking/driver/${decodedToken.id}`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(bookings => {
+      const now = new Date();
+      const upcoming = bookings.filter(job => 
+        new Date(job.startTime) > now && 
+        (job.status === 'pending' || job.status === 'confirmed')
+      );
+
+      setUpcomingJobs(upcoming.map(job => ({
+        id: job._id,
+        service: job.service,
+        date: new Date(job.date).toISOString().split('T')[0],
+        time: new Date(job.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        customer: job.customerName || 'Customer',
+        address: job.location,
+        status: job.status === 'pending' ? 'Pending' : 'Confirmed'
+      })));
+    })
+    .catch(error => {
+      console.error("Error fetching driver bookings:", error);
+    });
+  };
+
   useEffect(() => {
     const token = sessionStorage.getItem("token");
   
     if (!token) {
-      // If no token is found, redirect to login
       navigate("/");
     } else {
       try {
-        // Decode the token to extract user details
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
         setUserDetails(decodedToken);
         
-        // Fetch driver data to get current availability status
+        // Fetch driver availability
         fetch(`http://localhost:5555/drivers/drivers/${decodedToken.id}`)
-  .then(response => {
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    return response.json();
-  })
-  .then(data => {
-    setIsAvailable(data.availability);
-  })
-  .catch(error => {
-    console.error("Error fetching driver details:", error);
-  });
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            setIsAvailable(data.availability);
+          })
+          .catch(error => {
+            console.error("Error fetching driver details:", error);
+          });
+
+        // Fetch driver bookings
+        fetchDriverBookings();
+
       } catch (error) {
         console.error("Error decoding token:", error);
-        navigate("/"); // Redirect to login on error
+        navigate("/");
       }
     }
   }, [navigate]);
+
+  // Booking action handlers
+  const handleBookingConfirm = (bookingId) => {
+    const token = sessionStorage.getItem("token");
+
+    fetch(`http://localhost:5555/booking/${bookingId}/confirm`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to confirm booking');
+      }
+      return response.json();
+    })
+    .then(() => {
+      // Refresh bookings after confirmation
+      fetchDriverBookings();
+    })
+    .catch(error => {
+      console.error('Booking confirmation error:', error);
+      alert('Could not confirm booking. Please try again.');
+    });
+  };
+
+  const handleBookingReject = (bookingId) => {
+    const token = sessionStorage.getItem("token");
+
+    fetch(`http://localhost:5555/booking/${bookingId}/reject`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to reject booking');
+      }
+      return response.json();
+    })
+    .then(() => {
+      // Refresh bookings after rejection
+      fetchDriverBookings();
+    })
+    .catch(error => {
+      console.error('Booking rejection error:', error);
+      alert('Could not reject booking. Please try again.');
+    });
+  };
   
     
-  // Sample data
-  const upcomingJobs = [
-    { id: 1, service: 'Full Truck', date: '2025-03-22', time: '10:00 AM', customer: 'Alex Johnson', address: '123 Main St, Anytown', status: 'Confirmed' },
-    { id: 2, service: 'Half Truck', date: '2025-03-25', time: '02:30 PM', customer: 'Sarah Williams', address: '456 Oak Ave, Someville', status: 'Pending' }
-  ];
-  
-  const availableJobs = [
-    { id: 101, service: 'More Than Truck', date: '2025-03-30', time: 'Flexible', address: '789 Elm St, Othercity', details: 'Large furniture removal', estimatedPay: '$120-150' },
-    { id: 102, service: 'Full Truck', date: '2025-04-05', time: 'Morning', address: '321 Pine Rd, Somewhere', details: 'Construction debris removal', estimatedPay: '$100-120' }
-  ];
+ 
 
   const handleAvailabilityToggle = async () => {
     const newAvailability = !isAvailable;
@@ -228,54 +312,76 @@ const DriverDashboard = () => {
               </div>
               
               <div className="bg-white rounded-lg shadow mb-6">
-                <div className="p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-medium text-gray-800">Upcoming Jobs</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {upcomingJobs.map((job) => (
-                        <tr key={job.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="font-medium text-gray-900">{job.service}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-gray-900">{job.date}</div>
-                            <div className="text-gray-500 text-sm">{job.time}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-gray-900">{job.customer}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-gray-900">{job.address}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              job.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                            }`}>
-                              {job.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button className="text-green-600 hover:text-green-900 mr-3">Start Navigation</button>
-                            <button className="text-gray-600 hover:text-gray-900">Details</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+      <div className="p-4 border-b border-gray-200">
+        <h2 className="text-lg font-medium text-gray-800">Jobs</h2>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {upcomingJobs.map((job) => (
+              <tr key={job.id}>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="font-medium text-gray-900">{job.service}</span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-gray-900">{job.date}</div>
+                  <div className="text-gray-500 text-sm">{job.time}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="text-gray-900">{job.customer}</span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className="text-gray-900">{job.address}</span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    job.status === 'Confirmed' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {job.status}
+                  </span>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm">
+                  {job.status === 'Pending' && (
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => handleBookingConfirm(job.id)}
+                        className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                      >
+                        Confirm
+                      </button>
+                      <button 
+                        onClick={() => handleBookingReject(job.id)}
+                        className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  )}
+                  {job.status === 'Confirmed' && (
+                    <div className="flex space-x-2">
+                      <button className="text-green-600 hover:text-green-900">Start Navigation</button>
+                      <button className="text-gray-600 hover:text-gray-900">Details</button>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
               
               <div className="bg-white rounded-lg shadow">
                 <div className="p-4 border-b border-gray-200">
