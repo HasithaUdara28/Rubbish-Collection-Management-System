@@ -11,16 +11,16 @@ const Home = () => {
     const token = sessionStorage.getItem("token");
 
     if (!token) {
-      // If no token is found, redirect to login
+      
       navigate("/");
     } else {
       try {
-        // Decode the token to extract user details
+       
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
         setUserDetails(decodedToken);
       } catch (error) {
         console.error("Error decoding token:", error);
-        navigate("/"); // Redirect to login on error
+        navigate("/"); 
       }
     }
   }, [navigate]);
@@ -52,7 +52,7 @@ const Home = () => {
 </section>
 
 <section className="m-10 text-center">
-  {/* Title */}
+  
   <h2 className="mb-20 text-4xl md:text-6xl font-bold font-heading tracking-px-n leading-tight md:max-w-lg text-center mx-auto">
   Services
 </h2>

@@ -12,14 +12,14 @@ const driverSchema = mongoose.Schema(
         availability: { type: Boolean, default: false },
         verified: { type: Boolean, default: false },
         
-        // Services the driver can offer
+       
         services: { 
             type: [String], 
             enum: ["Half Truck", "Full Truck", "More Than Truck"],
             default: [] 
         },
 
-        // Locations the driver operates in
+       
         locations: { 
             type: [String], 
             default: [] 
@@ -29,21 +29,15 @@ const driverSchema = mongoose.Schema(
         timestamps: true,
     }
 );
-
-// Hash the password before saving
 driverSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
     next();
 });
-
-// Compare password
 driverSchema.methods.comparePassword = async function(password) {
     return await bcrypt.compare(password, this.password);
 };
-
-// Generate JWT Token
 driverSchema.methods.generateAuthToken = function() {
     return jwt.sign({ id: this._id, role: 'driver', name: this.name }, 'your_secret_key_here', { expiresIn: '1h' });
 };

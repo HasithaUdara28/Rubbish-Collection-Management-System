@@ -15,17 +15,17 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
   const [isCheckingAvailability, setIsCheckingAvailability] = useState(false);
   const [timeSlotError, setTimeSlotError] = useState(null);
 
-  // Get durations for each service type
+  
   const getServiceDuration = (serviceType) => {
     switch(serviceType) {
-      case "Half Truck": return 2; // 2 hours
-      case "Full Truck": return 5; // 5 hours
-      case "More Than Truck": return 8; // 8 hours
+      case "Half Truck": return 2; 
+      case "Full Truck": return 5; 
+      case "More Than Truck": return 8; 
       default: return 2;
     }
   };
 
-  // Fetch existing bookings when component mounts or driver changes
+  
   useEffect(() => {
     const fetchExistingBookings = async () => {
       try {

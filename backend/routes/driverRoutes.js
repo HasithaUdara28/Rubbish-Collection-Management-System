@@ -3,7 +3,7 @@ import { Driver } from '../models/driverModel.js';
 
 const router = express.Router();
 
-// Register a Driver
+
 router.post('/register', async (req, res) => {
     try {
         const { name, email, password, vehicleType, licenceNumber, services, locations } = req.body;
@@ -12,13 +12,13 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'Send all required fields' });
         }
 
-        // Validate services
+        
         const validServices = ["Half Truck", "Full Truck", "More Than Truck"];
         if (services && !services.every(service => validServices.includes(service))) {
             return res.status(400).json({ message: 'Invalid service type(s)' });
         }
 
-        // Create new driver
+        
         const driver = new Driver({
             name,
             email,
@@ -39,7 +39,7 @@ router.post('/register', async (req, res) => {
     }
 });
 
-// Driver Login
+
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -151,7 +151,5 @@ router.get('/drivers/:id', async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
-
-
 
 export default router;

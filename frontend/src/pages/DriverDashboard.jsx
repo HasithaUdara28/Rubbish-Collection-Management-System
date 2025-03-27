@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TruckIcon, ToggleLeftIcon, ToggleRightIcon, CalendarIcon, ClipboardListIcon, CreditCardIcon, UserIcon, BellIcon, LogOut } from 'lucide-react';
+import AvailableJobsPage from "./AvailableJobsPage";
 
 const DriverDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -10,7 +11,7 @@ const DriverDashboard = () => {
   const [availableJobs, setAvailableJobs] = useState([]);
   const navigate = useNavigate();
 
-  // Fetch bookings function to reuse
+  
   const fetchDriverBookings = () => {
     const token = sessionStorage.getItem("token");
     const decodedToken = JSON.parse(atob(token.split(".")[1]));
@@ -432,7 +433,7 @@ const DriverDashboard = () => {
           
           {/* Other tab content would go here */}
           {activeTab === 'schedule' && <div><h2 className="text-xl font-semibold mb-4">My Schedule</h2></div>}
-          {activeTab === 'jobs' && <div><h2 className="text-xl font-semibold mb-4">Available Jobs</h2></div>}
+          {activeTab === 'jobs' && <AvailableJobsPage />}
           {activeTab === 'earnings' && <div><h2 className="text-xl font-semibold mb-4">Earnings</h2></div>}
         </div>
       </div>

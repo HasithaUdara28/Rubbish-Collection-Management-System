@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios';
 import { CalendarIcon, TruckIcon, ClipboardListIcon, CreditCardIcon, UserIcon, BellIcon, LogOut } from 'lucide-react';
+import PostJobPage from "./PostJobPage";
+import JobsPage from "./JobsPage";
 
 const CustomerDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -165,7 +167,7 @@ const CustomerDashboard = () => {
               <div className="mr-3">
                 <CalendarIcon size={18} />
               </div>
-              My Bookings
+              My Jobs
             </button>
             
             <button 
@@ -364,8 +366,8 @@ const CustomerDashboard = () => {
           )}
           
           {/* Other tab content */}
-          {activeTab === 'bookings' && <div><h2 className="text-xl font-semibold mb-4">My Bookings</h2></div>}
-          {activeTab === 'posts' && <div><h2 className="text-xl font-semibold mb-4">Job Posts</h2></div>}
+          {activeTab === 'bookings' && <JobsPage />}
+          {activeTab === 'posts' && <PostJobPage />}
           {activeTab === 'payments' && <div><h2 className="text-xl font-semibold mb-4">Payment History</h2></div>}
         </div>
       </div>

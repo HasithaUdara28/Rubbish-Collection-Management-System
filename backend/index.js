@@ -5,6 +5,7 @@ import cors from 'cors';
 import driversRouter from './routes/driverRoutes.js'
 import userRouter from './routes/userRoutes.js'
 import bookingRouter from './routes/BookingRoutes.js'
+import jobRoute from './routes/jobRoutes.js'
 
 const app= express();
 
@@ -19,6 +20,7 @@ app.get('/',(request,response)=>{
 app.use('/drivers',driversRouter);
 app.use('/user',userRouter);
 app.use('/booking',bookingRouter);
+app.use('/jobs',jobRoute);
 
 mongoose.connect(mongoDBURL)
     .then(()=>{
