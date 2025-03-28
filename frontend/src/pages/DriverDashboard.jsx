@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TruckIcon, ToggleLeftIcon, ToggleRightIcon, CalendarIcon, ClipboardListIcon, CreditCardIcon, UserIcon, BellIcon, LogOut } from 'lucide-react';
 import AvailableJobsPage from "./AvailableJobsPage";
+import DriverJobs from "./DriverJobs";
 
 const DriverDashboard = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -432,7 +433,7 @@ const DriverDashboard = () => {
           )}
           
           {/* Other tab content would go here */}
-          {activeTab === 'schedule' && <div><h2 className="text-xl font-semibold mb-4">My Schedule</h2></div>}
+          {activeTab === 'schedule' && <DriverJobs />}
           {activeTab === 'jobs' && <AvailableJobsPage />}
           {activeTab === 'earnings' && <div><h2 className="text-xl font-semibold mb-4">Earnings</h2></div>}
         </div>

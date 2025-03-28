@@ -1,10 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, User, Star, Phone, Mail } from 'lucide-react';
+import { X, User, Star, Phone, Mail, CreditCard } from 'lucide-react';
+import DriverSelectionModal from './DriverSelectionModal ';
+import PaymentModal from './PaymentModal'; // You'll need to create this component
 
 const AppliedDriversModal = ({ job, onClose }) => {
+  const [selectedJob, setSelectedJob] = useState(null);
   const [appliedDrivers, setAppliedDrivers] = useState([]);
+  const [showDriverSelection, setShowDriverSelection] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -13,13 +17,20 @@ const AppliedDriversModal = ({ job, onClose }) => {
       try {
         const token = sessionStorage.getItem('token');
         
+        if (!token) {
+          setError('No authentication token found');
+          setLoading(false);
+          return;
+        }
+
         const response = await axios.get(`http://localhost:5555/jobs/${job._id}/applied-drivers`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        setAppliedDrivers(response.data.driversApplied);
+        setSelectedJob(job);
+        setAppliedDrivers(response.data.driversApplied || []); // Add fallback to empty array
         setLoading(false);
       } catch (err) {
         console.error('Error fetching applied drivers:', err);
@@ -28,8 +39,15 @@ const AppliedDriversModal = ({ job, onClose }) => {
       }
     };
 
-    fetchAppliedDrivers();
-  }, [job._id]);
+    if (job && job._id) {
+      fetchAppliedDrivers();
+    }
+  }, [job]);
+
+  const handleDriverSelection = (updatedJob) => {
+    setShowDriverSelection(false);
+    onClose();
+  };
 
   const renderStarRating = (rating) => {
     return [...Array(5)].map((_, index) => (
@@ -43,6 +61,28 @@ const AppliedDriversModal = ({ job, onClose }) => {
       />
     ));
   };
+
+  const handleSelectDriver = (driver) => {
+    // Only allow selection when job is in "posted" status
+    if (job.status === 'posted') {
+      setShowDriverSelection(true);
+    }
+  };
+
+  const handlePayJob = () => {
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentComplete = () => {
+    setShowPaymentModal(false);
+    onClose(); // Optionally close the modal or refresh the job status
+  };
+
+  // Check if job is in a state where driver selection is disabled
+  const isDriverSelectionDisabled = job.status === 'accepted' || job.status === 'completed';
+  
+  // Check if we can show the payment button (only when status is "accepted")
+  const showPaymentButton = job.status === 'accepted';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -95,9 +135,20 @@ const AppliedDriversModal = ({ job, onClose }) => {
 
         {/* Applied Drivers Section */}
         <div className="p-6">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Applied Drivers ({appliedDrivers.length})
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Applied Drivers ({appliedDrivers.length})
+            </h3>
+            {showPaymentButton && (
+              <button 
+                onClick={handlePayJob}
+                className="flex items-center px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                <CreditCard size={16} className="mr-2" />
+                Pay for Job
+              </button>
+            )}
+          </div>
 
           {loading ? (
             <div className="text-center py-4">
@@ -146,12 +197,44 @@ const AppliedDriversModal = ({ job, onClose }) => {
                         </div>
                       )}
                     </div>
+                    <div className="mt-2">
+                      <button 
+                        onClick={() => handleSelectDriver(driver)}
+                        disabled={isDriverSelectionDisabled}
+                        className={`${
+                          isDriverSelectionDisabled
+                            ? 'text-gray-400 cursor-not-allowed' 
+                            : 'text-blue-600 hover:text-blue-800'
+                        }`}
+                      >
+                        Select Driver
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Driver Selection Modal */}
+        {showDriverSelection && (
+          <DriverSelectionModal 
+            job={selectedJob}
+            appliedDrivers={appliedDrivers}
+            onClose={() => setShowDriverSelection(false)}
+            onDriverSelect={handleDriverSelection}
+          />
+        )}
+
+        {/* Payment Modal */}
+        {showPaymentModal && (
+          <PaymentModal 
+            job={selectedJob}
+            onClose={() => setShowPaymentModal(false)}
+            onPaymentComplete={handlePaymentComplete}
+          />
+        )}
       </div>
     </div>
   );

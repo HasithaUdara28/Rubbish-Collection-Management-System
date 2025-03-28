@@ -10,7 +10,7 @@ const Navbar = () => {
           <a className="text-3xl font-bold leading-none" href="#">
             <img
               className="h-20"
-              src="logos.png"
+              src="logoo.png"
               alt="Logo"
             />
           </a>

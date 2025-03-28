@@ -333,5 +333,183 @@ router.get('/', async (req, res) => {
       });
     }
   });
+
+  router.put('/:jobId/select-driver', authenticateToken, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const { driverId } = req.body;
+      const customerId = req.user.id;
   
+      // Validate job ID and driver ID
+      if (!mongoose.Types.ObjectId.isValid(jobId) || !mongoose.Types.ObjectId.isValid(driverId)) {
+        return res.status(400).json({ 
+          message: 'Invalid job or driver ID' 
+        });
+      }
+  
+      // Find the job
+      const job = await Job.findOne({ 
+        _id: jobId, 
+        customerId: customerId 
+      });
+  
+      if (!job) {
+        return res.status(404).json({ 
+          message: 'Job not found' 
+        });
+      }
+  
+      // Check if the driver has applied to this job
+      if (!job.driversApplied.includes(driverId)) {
+        return res.status(400).json({ 
+          message: 'Selected driver has not applied to this job' 
+        });
+      }
+  
+      // Check job status
+      if (job.status !== 'posted' && job.status !== 'bidding') {
+        return res.status(400).json({ 
+          message: 'Job cannot be assigned at this stage' 
+        });
+      }
+  
+      // Update job with selected driver
+      job.driverId = driverId;
+      job.status = 'accepted';
+  
+      await job.save();
+  
+      // Optionally, you might want to notify the driver
+      // This would typically involve a separate notification service
+  
+      res.status(200).json({
+        message: 'Driver selected successfully',
+        job: {
+          _id: job._id,
+          driverId: job.driverId,
+          status: job.status
+        }
+      });
+  
+    } catch (error) {
+      console.error('Driver Selection Error:', error);
+      res.status(500).json({ 
+        message: 'Internal server error',
+        error: error.message 
+      });
+    }
+  });
+
+  router.get('/driver/accepted-jobs', authenticateToken, async (req, res) => {
+    try {
+      // Debugging - Print the whole user object from the token
+      console.log('User from token:', req.user);
+      
+      // Check if user exists and has an _id
+      if (!req.user) {
+        return res.status(400).json({ message: 'User information not found in token' });
+      }
+      
+      // Extract the driver ID from the token - check both _id and id fields
+      const driverId = req.user._id || req.user.id;
+      console.log('Driver ID from token:', driverId);
+      
+      // If no driver ID was found, return an error
+      if (!driverId) {
+        return res.status(400).json({ 
+          message: 'Driver ID not found in token',
+          tokenUser: req.user
+        });
+      }
+      
+      // Get jobs with this driver ID
+      const acceptedJobs = await Job.find({ 
+        driverId: driverId, 
+        status: 'accepted' 
+      }).populate('customerId');
+      
+      console.log('Found jobs:', acceptedJobs.length);
+      
+      // Return the jobs found
+      res.json({ 
+        acceptedJobs,
+        message: acceptedJobs.length ? 'Jobs found' : 'No accepted jobs' 
+      });
+    } catch (error) {
+      console.error('Full error in route:', error);
+      res.status(500).json({ 
+        message: 'Error retrieving accepted jobs', 
+        error: error.toString() 
+      });
+    }
+  });
+  
+  router.put('/:jobId/complete', authenticateToken, async (req, res) => {
+    try {
+      const { jobId } = req.params;
+      const driverId = req.user.id;
+  
+      // Validate job ID
+      if (!mongoose.Types.ObjectId.isValid(jobId)) {
+        return res.status(400).json({ 
+          message: 'Invalid job ID' 
+        });
+      }
+  
+      // Find the job
+      const job = await Job.findOne({ 
+        _id: jobId, 
+        driverId: driverId,
+        status: 'accepted' // Only accepted jobs can be completed
+      });
+  
+      if (!job) {
+        return res.status(404).json({ 
+          message: 'Job not found or cannot be completed' 
+        });
+      }
+  
+      // Update job status to completed
+      job.status = 'completed';
+      await job.save();
+  
+      res.status(200).json({
+        message: 'Job marked as completed successfully',
+        job: {
+          _id: job._id,
+          status: job.status
+        }
+      });
+  
+    } catch (error) {
+      console.error('Job Completion Error:', error);
+      res.status(500).json({ 
+        message: 'Internal server error',
+        error: error.message 
+      });
+    }
+  });
+
+  router.get('/driver/completed-jobs', authenticateToken, async (req, res) => {
+    try {
+      const driverId = req.user.id;
+      
+      // Get completed jobs for this driver
+      const completedJobs = await Job.find({ 
+        driverId: driverId, 
+        status: 'completed' 
+      }).populate('customerId').sort({ updatedAt: -1 });
+      
+      res.json({ 
+        completedJobs,
+        message: completedJobs.length ? 'Completed jobs found' : 'No completed jobs' 
+      });
+    } catch (error) {
+      console.error('Error retrieving completed jobs:', error);
+      res.status(500).json({ 
+        message: 'Error retrieving completed jobs', 
+        error: error.toString() 
+      });
+    }
+  });
 export default router;
