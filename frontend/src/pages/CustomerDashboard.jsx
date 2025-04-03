@@ -10,10 +10,7 @@ const CustomerDashboard = () => {
   const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState(null);
   const [upcomingBookings, setUpcomingBookings] = useState([]);
-  const [jobPosts, setJobPosts] = useState([
-    { id: 101, service: 'More Than Truck', date: '2025-03-30', time: 'Flexible', location: '123 Main St', bids: 4 },
-    { id: 102, service: 'Full Truck', date: '2025-04-05', time: 'Morning', location: '456 Park Ave', bids: 2 }
-  ]);
+  const [completedBookings, setCompletedBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -21,11 +18,9 @@ const CustomerDashboard = () => {
     const token = sessionStorage.getItem("token");
   
     if (!token) {
-      // If no token is found, redirect to login
       navigate("/");
     } else {
       try {
-        // Decode the token to extract user details
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
         setUserDetails(decodedToken);
         
@@ -47,13 +42,18 @@ const CustomerDashboard = () => {
         }
       });
       
-      // Sort bookings with confirmed and pending statuses first
-      const sortedBookings = response.data.sort((a, b) => {
+      // Separate bookings into upcoming and completed
+      const completed = response.data.filter(booking => booking.status === 'completed');
+      const upcoming = response.data.filter(booking => booking.status !== 'completed');
+      
+      // Sort upcoming bookings with confirmed and pending statuses first
+      const sortedUpcoming = upcoming.sort((a, b) => {
         const statusOrder = { 'confirmed': 1, 'pending': 2, 'cancelled': 3 };
         return statusOrder[a.status.toLowerCase()] - statusOrder[b.status.toLowerCase()];
       });
 
-      setUpcomingBookings(sortedBookings);
+      setUpcomingBookings(sortedUpcoming);
+      setCompletedBookings(completed);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching bookings:", error);
@@ -72,20 +72,42 @@ const CustomerDashboard = () => {
 
   const handleCancelBooking = async (bookingId) => {
     try {
-      const token = sessionStorage.getItem("token");
-      await axios.put(`http://localhost:5555/booking/${bookingId}/cancel`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      // Refresh bookings after cancellation
-      fetchBookings(token);
+        const token = sessionStorage.getItem("token");
+        const response = await axios.put(`http://localhost:5555/booking/${bookingId}/cancel`, {}, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        // Show success message
+        // You could use a toast notification library here
+        alert("Booking cancelled successfully");
+        
+        // Refresh bookings after cancellation
+        fetchBookings(token);
     } catch (error) {
-      console.error("Error cancelling booking:", error);
-      // Optionally show error message to user
+        console.error("Error cancelling booking:", error);
+        // Show error message from server
+        if (error.response && error.response.data && error.response.data.message) {
+            alert(error.response.data.message);
+        } else {
+            alert("Failed to cancel booking. Please try again.");
+        }
     }
-  };
+};
+
+// Helper function to check if booking is cancellable
+const isBookingCancellable = (booking) => {
+  if (!['confirmed', 'pending'].includes(booking.status)) {
+      return false;
+  }
+  
+  const now = new Date();
+  const bookingTime = new Date(booking.startTime);
+  const hoursDifference = (bookingTime - now) / (1000 * 60 * 60);
+  
+  return hoursDifference >= 8;
+};
 
   const handleLogout = () => {
     // Clear token and redirect to login
@@ -248,7 +270,7 @@ const CustomerDashboard = () => {
                 <div className="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
                   <h3 className="text-gray-500 text-sm font-medium">Completed Pickups</h3>
                   <p className="mt-1 text-2xl font-semibold text-gray-900">
-                    {upcomingBookings.filter(b => b.status === 'completed').length}
+                    {completedBookings.length}
                   </p>
                   <p className="mt-1 text-sm text-gray-600">Last 6 months</p>
                 </div>
@@ -305,12 +327,14 @@ const CustomerDashboard = () => {
                               Pay
                             </button>
                             <button 
-                              className="text-red-600 hover:text-red-900"
-                              onClick={() => handleCancelBooking(booking._id)}
-                              disabled={['confirmed', 'pending'].includes(booking.status)}
-                            >
-                              Cancel
-                            </button>
+    className={`text-red-600 ${
+        isBookingCancellable(booking) ? 'hover:text-red-900' : 'text-opacity-50 cursor-not-allowed'
+    }`}
+    onClick={() => isBookingCancellable(booking) && handleCancelBooking(booking._id)}
+    disabled={!isBookingCancellable(booking)}
+>
+    Cancel
+</button>
                           </td>
                         </tr>
                       ))}
@@ -319,49 +343,53 @@ const CustomerDashboard = () => {
                 </div>
               </div>
               
-              <div className="bg-white rounded-lg shadow">
-                <div className="p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-medium text-gray-800">Your Active Job Posts</h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bids</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {jobPosts.map((job) => (
-                        <tr key={job.id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="font-medium text-gray-900">{job.service}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-gray-900">{job.date}</div>
-                            <div className="text-gray-500 text-sm">{job.time}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-gray-900">{job.location}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {job.bids} bids
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">View Bids</button>
-                            <button className="text-red-600 hover:text-red-900">Remove</button>
-                          </td>
+             
+              
+              {/* New Completed Bookings Section */}
+              {completedBookings.length > 0 && (
+                <div className="bg-white rounded-lg shadow">
+                  <div className="p-4 border-b border-gray-200">
+                    <h2 className="text-lg font-medium text-gray-800">Completed Bookings</h2>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {completedBookings.map((booking) => (
+                          <tr key={booking._id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="font-medium text-gray-900">{booking.service}</span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-gray-900">{new Date(booking.date).toLocaleDateString()}</div>
+                              <div className="text-gray-500 text-sm">{new Date(booking.startTime).toLocaleTimeString()}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="text-gray-900">{booking.location}</span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                {booking.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm">
+                              <button className="text-green-600 hover:text-green-900">View Details</button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
             </>
           )}
           

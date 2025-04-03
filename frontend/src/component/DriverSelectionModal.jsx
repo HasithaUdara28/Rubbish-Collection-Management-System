@@ -17,6 +17,12 @@ const DriverSelectionModal = ({ job, appliedDrivers, onClose, onDriverSelect }) 
       setLoading(true);
       const token = sessionStorage.getItem('token');
 
+      if (!token) {
+        setError('Authentication token not found');
+        setLoading(false);
+        return;
+      }
+
       const response = await axios.put(
         `http://localhost:5555/jobs/${job._id}/select-driver`, 
         { driverId: selectedDriver._id },

@@ -10,13 +10,15 @@ const DriverDashboard = () => {
   const [userDetails, setUserDetails] = useState(null);
   const [upcomingJobs, setUpcomingJobs] = useState([]);
   const [availableJobs, setAvailableJobs] = useState([]);
+  const [completedBookings, setCompletedBookings] = useState([]);
+  const [cancelledBookings, setCancelledBookings] = useState([]); // New state for cancelled bookings
   const navigate = useNavigate();
 
   
   const fetchDriverBookings = () => {
     const token = sessionStorage.getItem("token");
     const decodedToken = JSON.parse(atob(token.split(".")[1]));
-
+  
     fetch(`http://localhost:5555/booking/driver/${decodedToken.id}`, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -30,19 +32,55 @@ const DriverDashboard = () => {
     })
     .then(bookings => {
       const now = new Date();
+      
+      // Filter upcoming bookings (pending or confirmed)
       const upcoming = bookings.filter(job => 
         new Date(job.startTime) > now && 
         (job.status === 'pending' || job.status === 'confirmed')
       );
-
+  
+      // Filter completed bookings
+      const completed = bookings.filter(job => 
+        job.status === 'completed'
+      );
+  
+      // Filter cancelled bookings
+      const cancelled = bookings.filter(job => 
+        job.status === 'cancelled' || job.status === 'rejected'
+      );
+  
+      // Process upcoming jobs
       setUpcomingJobs(upcoming.map(job => ({
+        id: job._id,
+        service: job.service,
+        date: new Date(job.date).toISOString().split('T')[0],
+        time: new Date(job.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        customer: job.customerId || 'Customer',
+        address: job.location,
+        status: job.status === 'pending' ? 'Pending' : 'Confirmed'
+      })));
+      
+      // Process completed jobs
+      setCompletedBookings(completed.map(job => ({
         id: job._id,
         service: job.service,
         date: new Date(job.date).toISOString().split('T')[0],
         time: new Date(job.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
         customer: job.customerName || 'Customer',
         address: job.location,
-        status: job.status === 'pending' ? 'Pending' : 'Confirmed'
+        totalPrice: job.totalPrice || 0
+      })));
+
+      // Process cancelled jobs
+      setCancelledBookings(cancelled.map(job => ({
+        id: job._id,
+        service: job.service,
+        date: new Date(job.date).toISOString().split('T')[0],
+        time: new Date(job.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+        customer: job.customerName || 'Customer',
+        address: job.location,
+        reason: job.cancellationReason || (job.status === 'rejected' ? 'Driver rejected' : 'Cancelled'),
+        status: job.status
       })));
     })
     .catch(error => {
@@ -138,7 +176,32 @@ const DriverDashboard = () => {
     });
   };
   
-    
+  // New handler to mark booking as completed
+  const handleBookingComplete = (bookingId) => {
+    const token = sessionStorage.getItem("token");
+
+    fetch(`http://localhost:5555/booking/${bookingId}/complete`, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to mark booking as completed');
+      }
+      return response.json();
+    })
+    .then(() => {
+      // Refresh bookings after marking as completed
+      fetchDriverBookings();
+    })
+    .catch(error => {
+      console.error('Booking completion error:', error);
+      alert('Could not mark booking as completed. Please try again.');
+    });
+  };
  
 
   const handleAvailabilityToggle = async () => {
@@ -373,8 +436,18 @@ const DriverDashboard = () => {
                   )}
                   {job.status === 'Confirmed' && (
                     <div className="flex space-x-2">
-                      <button className="text-green-600 hover:text-green-900">Start Navigation</button>
-                      <button className="text-gray-600 hover:text-gray-900">Details</button>
+                      <button 
+                        onClick={() => handleBookingComplete(job.id)}
+                        className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                      >
+                        Complete
+                      </button>
+                      <button className="text-green-600 hover:text-green-900">
+                        Start Navigation
+                      </button>
+                      <button className="text-gray-600 hover:text-gray-900">
+                        Details
+                      </button>
                     </div>
                   )}
                 </td>
@@ -385,9 +458,9 @@ const DriverDashboard = () => {
       </div>
     </div>
               
-              <div className="bg-white rounded-lg shadow">
+              <div className="bg-white rounded-lg shadow mb-6">
                 <div className="p-4 border-b border-gray-200">
-                  <h2 className="text-lg font-medium text-gray-800">Available Job Bids</h2>
+                  <h2 className="text-lg font-medium text-gray-800">Completed Bookings</h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
@@ -395,36 +468,110 @@ const DriverDashboard = () => {
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Est. Pay</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {availableJobs.map((job) => (
-                        <tr key={job.id}>
+                      {completedBookings.map((booking) => (
+                        <tr key={booking.id}>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="font-medium text-gray-900">{job.service}</span>
+                            <span className="font-medium text-gray-900">{booking.service}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-gray-900">{job.date}</div>
-                            <div className="text-gray-500 text-sm">{job.time}</div>
+                            <div className="text-gray-900">{booking.date}</div>
+                            <div className="text-gray-500 text-sm">{booking.time}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-gray-900">{job.address}</span>
+                            <span className="text-gray-900">{booking.customer}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-gray-900">{job.details}</span>
+                            <span className="text-gray-900">{booking.address}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-gray-900">{job.estimatedPay}</span>
+                            <span className="text-gray-900">${booking.totalPrice}</span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">Submit Bid</button>
+                            <button className="text-blue-600 hover:text-blue-900">
+                              View Details
+                            </button>
                           </td>
                         </tr>
                       ))}
+                      {completedBookings.length === 0 && (
+                        <tr>
+                          <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                            No completed bookings to display
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Cancelled Bookings Section */}
+              <div className="bg-white rounded-lg shadow">
+                <div className="p-4 border-b border-gray-200">
+                  <h2 className="text-lg font-medium text-gray-800">Cancelled Bookings</h2>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {cancelledBookings.map((booking) => (
+                        <tr key={booking.id}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="font-medium text-gray-900">{booking.service}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-gray-900">{booking.date}</div>
+                            <div className="text-gray-500 text-sm">{booking.time}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-gray-900">{booking.customer}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-gray-900">{booking.address}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              booking.status === 'rejected' 
+                                ? 'bg-red-100 text-red-800' 
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {booking.status === 'rejected' ? 'Rejected' : 'Cancelled'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-gray-900">{booking.reason}</span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <button className="text-blue-600 hover:text-blue-900">
+                              View Details
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {cancelledBookings.length === 0 && (
+                        <tr>
+                          <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                            No cancelled bookings to display
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { TruckIcon, MapPinIcon, ClipboardListIcon, DollarSignIcon, FileTextIcon } from 'lucide-react';
+import { TruckIcon, MapPinIcon, ClipboardListIcon, DollarSignIcon, FileTextIcon, ClockIcon } from 'lucide-react';
 
 const PostJobPage = () => {
   const navigate = useNavigate();
   const [jobType, setJobType] = useState('');
   const [pickupLocation, setPickupLocation] = useState('');
+  const [pickupTime, setPickupTime] = useState('');
   const [description, setDescription] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState('');
   const [loading, setLoading] = useState(false);
@@ -58,16 +59,25 @@ const PostJobPage = () => {
       return;
     }
 
+    // Validate pickup time is in the future
+    const selectedTime = new Date(pickupTime);
+    const currentTime = new Date();
+    
+    if (selectedTime <= currentTime) {
+      setError("Pickup time must be in the future");
+      setLoading(false);
+      return;
+    }
+
     try {
       const payload = { 
         jobType, 
         pickupLocation,
+        pickupTime,
         description,
         estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : null,
         userId: userDetails?.id // Add user ID from decoded token
       };
-
-      console.log('Sending payload:', payload);
 
       const response = await axios.post(
         'http://localhost:5555/jobs/create', 
@@ -85,6 +95,7 @@ const PostJobPage = () => {
       // Reset form
       setJobType('');
       setPickupLocation('');
+      setPickupTime('');
       setDescription('');
       setEstimatedPrice('');
     } catch (err) {
@@ -164,6 +175,29 @@ const PostJobPage = () => {
           </div>
         </div>
 
+        {/* Pickup Time */}
+        <div>
+          <label htmlFor="pickupTime" className="block text-sm font-medium text-gray-700 mb-2">
+            Pickup Time
+          </label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <ClockIcon className="text-gray-400" size={20} />
+            </div>
+            <input
+              type="datetime-local"
+              id="pickupTime"
+              value={pickupTime}
+              onChange={(e) => setPickupTime(e.target.value)}
+              required
+              className="pl-10 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+            />
+          </div>
+          <p className="mt-1 text-sm text-gray-500">
+            Please select a future date and time for pickup
+          </p>
+        </div>
+
         {/* Job Description */}
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
@@ -187,7 +221,7 @@ const PostJobPage = () => {
         {/* Estimated Price */}
         <div>
           <label htmlFor="estimatedPrice" className="block text-sm font-medium text-gray-700 mb-2">
-            Estimated Price (Optional)
+            Estimated Price 
           </label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -222,9 +256,9 @@ const PostJobPage = () => {
         <div>
           <button
             type="submit"
-            disabled={loading || !jobType || !pickupLocation}
+            disabled={loading || !jobType || !pickupLocation || !pickupTime}
             className={`w-full py-3 px-4 rounded-md text-white font-semibold transition-colors ${
-              loading || !jobType || !pickupLocation
+              loading || !jobType || !pickupLocation || !pickupTime
                 ? 'bg-gray-400 cursor-not-allowed'
                 : 'bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2'
             }`}

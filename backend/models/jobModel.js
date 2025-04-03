@@ -20,14 +20,19 @@ const jobSchema = mongoose.Schema(
         type: String,
         required: true,
       },
+      pickupTime: {
+        type: Date,
+        required: true
+      },
       description: {
         type: String,
         default: '',
-        maxlength: 500 // Optional: add a max length
+        maxlength: 500 
       },
       estimatedPrice: {
         type: Number,
         min: 0,
+        required: true,
         default: null
       },
       status: {
@@ -46,7 +51,4 @@ const jobSchema = mongoose.Schema(
     }
   );
   
- 
-  
-
 export const Job = mongoose.model('Job', jobSchema);

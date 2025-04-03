@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TruckIcon, ClipboardListIcon } from 'lucide-react';
-import AppliedDriversModal from '../component/AppliedDriversModal ';
+import AppliedDriversModal from '../component/AppliedDriversModal';
 
 const JobsPage = () => {
   const [jobs, setJobs] = useState([]);
@@ -125,7 +125,7 @@ const JobsPage = () => {
                       <span className="text-gray-900">{job.pickupLocation}</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-gray-900">{formatDate(job.createdAt)}</div>
+                      <div className="text-gray-900">{formatDate(job.pickupTime)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

@@ -43,7 +43,7 @@ const Login = () => {
             <img src="bgimg.png" alt="Background Pattern" className="w-full h-full object-cover" />
           </div>
           <div className="relative z-10">
-            <img src="logos.png" alt="Logo" className="h-16 mb-8" />
+            <img src="logoo.png" alt="Logo" className="h-28 mb-2" />
             <h2 className="text-3xl font-bold mb-6">ECOCOLLECT</h2>
             <p className="text-lg opacity-90 mb-4">Welcome back to your sustainable waste management solution</p>
             <p className="text-sm opacity-80 mt-20">Making recycling easy and rewarding for communities worldwide.</p>

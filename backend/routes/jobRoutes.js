@@ -12,16 +12,26 @@ router.post('/create', authenticateToken, async (req, res) => {
     // Destructure and validate request body
     const { 
       jobType, 
-      pickupLocation, 
+      pickupLocation,
+      pickupTime, // Add this new field
       description, 
       estimatedPrice
     } = req.body;
 
     const customerId = req.user.id;
+    
     // Validate required fields
-    if (!jobType || !pickupLocation) {
+    if (!jobType || !pickupLocation || !pickupTime) { // Add pickupTime validation
       return res.status(400).json({ 
-        message: 'Job type and pickup location are required' 
+        message: 'Job type, pickup location, and pickup time are required' 
+      });
+    }
+
+    // Validate pickup time (ensure it's in the future)
+    const pickupTimeDate = new Date(pickupTime);
+    if (isNaN(pickupTimeDate.getTime()) || pickupTimeDate < new Date()) {
+      return res.status(400).json({
+        message: 'Invalid pickup time or time is in the past'
       });
     }
 
@@ -35,9 +45,10 @@ router.post('/create', authenticateToken, async (req, res) => {
 
     // Create new job
     const newJob = new Job({
-      customerId, // Use the userId from verified token
+      customerId,
       jobType,
       pickupLocation: pickupLocation.trim(),
+      pickupTime: pickupTimeDate, // Add the pickup time
       description: description || '',
       estimatedPrice: price,
       status: 'posted', // Use model's default status
@@ -113,15 +124,28 @@ router.get('/:jobId', authenticateToken, async (req, res) => {
 });
 
 // Route to update a job
+// Route to update a job
 router.put('/:jobId', authenticateToken, async (req, res) => {
   try {
     const { jobId } = req.params;
     const { 
       jobType, 
-      pickupLocation, 
+      pickupLocation,
+      pickupTime, // Add this field 
       description, 
       estimatedPrice 
     } = req.body;
+
+    // Validate pickup time if provided
+    let pickupTimeDate;
+    if (pickupTime) {
+      pickupTimeDate = new Date(pickupTime);
+      if (isNaN(pickupTimeDate.getTime()) || pickupTimeDate < new Date()) {
+        return res.status(400).json({
+          message: 'Invalid pickup time or time is in the past'
+        });
+      }
+    }
 
     // Find and update the job
     const updatedJob = await Job.findOneAndUpdate(
@@ -133,6 +157,7 @@ router.put('/:jobId', authenticateToken, async (req, res) => {
       { 
         jobType, 
         pickupLocation, 
+        pickupTime: pickupTimeDate, // Add this field
         description, 
         estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : null
       },
@@ -312,13 +337,7 @@ router.get('/', async (req, res) => {
         });
       }
   
-      // Optional: Add authorization check
-      // Ensure only the job creator can view applied drivers
-      // if (job.customerId.toString() !== req.user.id) {
-      //   return res.status(403).json({ 
-      //     message: 'Unauthorized to view applied drivers' 
-      //   });
-      // }
+    
   
       res.status(200).json({
         jobId: job._id,

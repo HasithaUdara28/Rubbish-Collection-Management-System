@@ -5,8 +5,6 @@ import { authenticateToken } from '../middleware/authenticate.js';
 
 const router = express.Router();
 
-// Create a new booking
-// Create a new booking
 router.post('/create', authenticateToken, async (req, res) => {
     try {
         const { 
@@ -18,17 +16,17 @@ router.post('/create', authenticateToken, async (req, res) => {
             notes 
         } = req.body;
 
-        // Get customer ID from auth middleware
+        
         const customerId = req.user.id;
 
         if (!driverId || !service || !date || !startTime || !location) {
             return res.status(400).json({ message: 'All required fields must be provided' });
         }
 
-        // Parse booking start time and date
+        
         const bookingStartTime = new Date(startTime);
         
-        // Check if booking is within 24 hours
+        
         const now = new Date();
         const twentyFourHoursFromNow = new Date(now);
         twentyFourHoursFromNow.setHours(now.getHours() + 24);
@@ -167,6 +165,18 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
         if (booking.status !== 'pending' && booking.status !== 'confirmed') {
             return res.status(400).json({ 
                 message: 'Cannot cancel booking that is already completed or cancelled' 
+            });
+        }
+
+        // Calculate time difference between now and the booking start time
+        const now = new Date();
+        const bookingTime = new Date(booking.startTime);
+        const hoursDifference = (bookingTime - now) / (1000 * 60 * 60);
+        
+        // Only allow cancellation if booking is more than 8 hours away
+        if (hoursDifference < 8) {
+            return res.status(400).json({ 
+                message: 'Bookings can only be cancelled at least 8 hours before the scheduled time' 
             });
         }
         
@@ -365,12 +375,13 @@ router.put('/:id/reject', authenticateToken, async (req, res) => {
             });
         }
 
-        // Delete the booking
-        await Booking.findByIdAndDelete(bookingId);
+        // Update the booking status to cancelled instead of deleting
+        booking.status = 'cancelled';
+        await booking.save();
 
         res.status(200).json({ 
-            message: 'Booking rejected and deleted successfully' 
-});
+            message: 'Booking rejected and marked as cancelled' 
+        });
     } catch (error) {
         console.error(error.message);
         res.status(500).json({ message: error.message });
@@ -406,6 +417,42 @@ router.put('/:id/confirm', authenticateToken, async (req, res) => {
 
         res.status(200).json({ 
             message: 'Booking confirmed successfully',
+            booking 
+        });
+    } catch (error) {
+        console.error(error.message);
+        res.status(500).json({ message: error.message });
+    }
+});
+
+router.put('/:id/complete', authenticateToken, async (req, res) => {
+    try {
+        const bookingId = req.params.id;
+        const driverId = req.user.id;
+
+        // Find the booking
+        const booking = await Booking.findOne({ 
+            _id: bookingId, 
+            driverId 
+        });
+
+        if (!booking) {
+            return res.status(404).json({ message: 'Booking not found' });
+        }
+
+        // Only allow completing bookings that are confirmed
+        if (booking.status !== 'confirmed') {
+            return res.status(400).json({ 
+                message: 'Only confirmed bookings can be marked as completed' 
+            });
+        }
+
+        // Update booking status
+        booking.status = 'completed';
+        await booking.save();
+
+        res.status(200).json({ 
+            message: 'Booking marked as completed successfully',
             booking 
         });
     } catch (error) {

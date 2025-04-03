@@ -182,7 +182,7 @@ const AvailableJobsPage = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center text-gray-900">
                         <CalendarIcon size={16} className="inline-block mr-2 text-blue-500" />
-                        {new Date(job.createdAt).toLocaleDateString()}
+                        {new Date(job.pickupTime).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

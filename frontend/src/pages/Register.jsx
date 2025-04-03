@@ -27,10 +27,9 @@ const Register = () => {
 
       // Storing token in sessionStorage
       sessionStorage.setItem("token", token);
-      console.log("User Registered", token);
 
       // Redirect to home page after successful registration
-      navigate("/home");
+      navigate("/");
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Registration failed. Please try again.");
       console.error(error.response?.data?.message);
@@ -48,7 +47,7 @@ const Register = () => {
             <img src="bgimg.png" alt="Background Pattern" className="w-full h-full object-cover" />
           </div>
           <div className="relative z-10">
-            <img src="logos.png" alt="Logo" className="h-16 mb-8" />
+            <img src="logoo.png" alt="Logo" className="h-28 mb-6" />
             <h2 className="text-3xl font-bold mb-6">ECOCOLLECT</h2>
             <p className="text-lg opacity-90 mb-4">Join our community of eco-conscious individuals</p>
             <p className="text-sm opacity-80 mt-20">Creating a sustainable future through responsible waste management and recycling.</p>

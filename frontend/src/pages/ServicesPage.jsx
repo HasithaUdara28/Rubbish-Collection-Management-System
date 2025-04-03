@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeftIcon, TruckIcon, StarIcon, MapPinIcon, PhoneIcon, UserIcon, FilterIcon, AlertCircleIcon, X } from 'lucide-react';
+import { ArrowLeftIcon, TruckIcon, StarIcon, MapPinIcon, PhoneIcon, UserIcon, FilterIcon, AlertCircleIcon, X, Clock, Calendar } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import Footer from '../component/Footer';
 import Navbar from '../component/Navbar';
-import BookingPopup from '../component/BookingPopup'; // Import the new component
+import BookingPopup from '../component/BookingPopup';
 
 const ServicesPage = () => {
   const location = useLocation();
@@ -13,6 +13,7 @@ const ServicesPage = () => {
   const initialService = location.state?.selectedService || 'Half Truck';
   const [selectedService, setSelectedService] = useState(initialService);
   const [availableDrivers, setAvailableDrivers] = useState([]);
+  const [filteredDrivers, setFilteredDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
@@ -22,6 +23,18 @@ const ServicesPage = () => {
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingData, setBookingData] = useState(null);
   
+  // Filter states
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const [availableLocations, setAvailableLocations] = useState([]);
+  const [availableTimes, setAvailableTimes] = useState([
+    'Morning (8am-12pm)',
+    'Afternoon (12pm-5pm)',
+    'Evening (5pm-9pm)',
+    'Any Time'
+  ]);
+  
   const services = [
     {
       id: 'Half Truck',
@@ -29,7 +42,7 @@ const ServicesPage = () => {
       description: 'Ideal for small cleanups, single items, or partial loads',
       capacity: 'Up to 50 cubic feet',
       idealFor: 'Single furniture items, small garden waste, partial garage cleanout',
-      price: '$70-90'
+      price: '$80'
     },
     {
       id: 'Full Truck',
@@ -37,7 +50,7 @@ const ServicesPage = () => {
       description: 'Perfect for medium-sized jobs and regular household cleanups',
       capacity: 'Up to 100 cubic feet',
       idealFor: 'Full room clearance, medium renovation waste, complete garage cleanout',
-      price: '$110-130'
+      price: '$150'
     },
     {
       id: 'More Than Truck',
@@ -45,7 +58,7 @@ const ServicesPage = () => {
       description: 'Our largest option for big cleanups and commercial projects',
       capacity: 'Up to 200 cubic feet',
       idealFor: 'Moving waste, large renovation projects, commercial cleanouts',
-      price: '$170-200'
+      price: '$280'
     }
   ];
 
@@ -69,14 +82,25 @@ const ServicesPage = () => {
           ...driver,
           rating: (Math.random() * (5 - 4) + 4).toFixed(1), // Mock rating between 4.0-5.0
           reviews: Math.floor(Math.random() * 200) + 20, // Mock reviews count
-          distance: `${(Math.random() * 5).toFixed(1)} miles`, // Mock distance
-          price: `$${driver.services.includes('More Than Truck') ? '170-200' : 
-                  driver.services.includes('Full Truck') ? '110-130' : '70-90'}`, // Price based on service
+          price: `$${driver.services.includes('More Than Truck') ? '280' : 
+                  driver.services.includes('Full Truck') ? '150' : '80'}`, // Price based on service
           experience: `${Math.floor(Math.random() * 8) + 1} years`, // Mock experience
-          available: 'Now' // Mock availability time
+          available: 'Now', // Mock availability time
+          availableTimes: generateMockTimes() // Add mock available times
         }));
         
         setAvailableDrivers(enhancedDrivers);
+        setFilteredDrivers(enhancedDrivers);
+        
+        // Extract all unique locations from drivers
+        const allLocations = enhancedDrivers
+          .flatMap(driver => driver.locations || [])
+          .filter((location, index, self) => self.indexOf(location) === index)
+          .sort();
+        
+        setAvailableLocations(['All Locations', ...allLocations]);
+        setSelectedLocation('All Locations');
+        setSelectedTime('Any Time');
       } catch (err) {
         console.error('Error fetching drivers:', err);
         setError('Failed to load available drivers. Please try again later.');
@@ -87,6 +111,41 @@ const ServicesPage = () => {
 
     fetchDrivers();
   }, [selectedService]);
+
+  // Generate mock available times for drivers
+  const generateMockTimes = () => {
+    const times = [];
+    const timeSlots = ['Morning (8am-12pm)', 'Afternoon (12pm-5pm)', 'Evening (5pm-9pm)'];
+    
+    // Randomly select 1-3 time slots
+    const numSlots = Math.floor(Math.random() * 3) + 1;
+    const selectedSlots = [...timeSlots].sort(() => 0.5 - Math.random()).slice(0, numSlots);
+    
+    return selectedSlots;
+  };
+
+  // Apply filters
+  useEffect(() => {
+    if (!availableDrivers.length) return;
+    
+    let filtered = [...availableDrivers];
+    
+    // Apply location filter
+    if (selectedLocation && selectedLocation !== 'All Locations') {
+      filtered = filtered.filter(driver => 
+        driver.locations && driver.locations.includes(selectedLocation)
+      );
+    }
+    
+    // Apply time filter
+    if (selectedTime && selectedTime !== 'Any Time') {
+      filtered = filtered.filter(driver => 
+        driver.availableTimes && driver.availableTimes.includes(selectedTime)
+      );
+    }
+    
+    setFilteredDrivers(filtered);
+  }, [selectedLocation, selectedTime, availableDrivers]);
 
   // Handle booking button click
   const handleBookNow = (driver) => {
@@ -118,6 +177,17 @@ const ServicesPage = () => {
       setBookingSuccess(false);
       setBookingData(null);
     }, 5000);
+  };
+
+  // Toggle filters visibility
+  const toggleFilters = () => {
+    setShowFilters(!showFilters);
+  };
+
+  // Reset filters
+  const resetFilters = () => {
+    setSelectedLocation('All Locations');
+    setSelectedTime('Any Time');
   };
 
   return (
@@ -170,7 +240,7 @@ const ServicesPage = () => {
               <div className="space-y-2 text-sm">
                 <p><span className="font-medium">Capacity:</span> {service.capacity}</p>
                 <p><span className="font-medium">Ideal for:</span> {service.idealFor}</p>
-                <p><span className="font-medium">Price range:</span> {service.price}</p>
+                <p><span className="font-medium">Price :</span> {service.price}</p>
               </div>
             </div>
           ))}
@@ -183,13 +253,72 @@ const ServicesPage = () => {
             
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-500">
-                {loading ? 'Loading...' : `${availableDrivers.length} drivers available`}
+                {loading ? 'Loading...' : `${filteredDrivers.length} drivers available`}
               </span>
-              <button className="p-2 rounded-md hover:bg-gray-100">
+              <button 
+                className="p-2 rounded-md hover:bg-gray-100 relative"
+                onClick={toggleFilters}
+              >
                 <FilterIcon size={20} className="text-gray-500" />
+                {(selectedLocation !== 'All Locations' || selectedTime !== 'Any Time') && (
+                  <span className="absolute -top-1 -right-1 bg-green-500 rounded-full w-3 h-3"></span>
+                )}
               </button>
             </div>
           </div>
+          
+          {/* Filters Panel */}
+          {showFilters && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="font-medium text-gray-700">Filter Drivers</h3>
+                <button 
+                  onClick={resetFilters}
+                  className="text-sm text-green-600 hover:text-green-800"
+                >
+                  Reset All
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Location Filter */}
+                <div>
+                  <label htmlFor="location-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                    <MapPinIcon size={16} className="inline mr-1" />
+                    Location
+                  </label>
+                  <select 
+                    id="location-filter"
+                    value={selectedLocation}
+                    onChange={(e) => setSelectedLocation(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  >
+                    {availableLocations.map(loc => (
+                      <option key={loc} value={loc}>{loc}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Time Availability Filter */}
+                <div>
+                  <label htmlFor="time-filter" className="block text-sm font-medium text-gray-700 mb-1">
+                    <Clock size={16} className="inline mr-1" />
+                    Time Availability
+                  </label>
+                  <select 
+                    id="time-filter"
+                    value={selectedTime}
+                    onChange={(e) => setSelectedTime(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  >
+                    {availableTimes.map(time => (
+                      <option key={time} value={time}>{time}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
           
           {loading ? (
             <div className="text-center py-12">
@@ -207,24 +336,21 @@ const ServicesPage = () => {
                 Try Again
               </button>
             </div>
-          ) : availableDrivers.length === 0 ? (
+          ) : filteredDrivers.length === 0 ? (
             <div className="text-center py-10 px-4 border border-dashed border-gray-300 rounded-lg">
               <UserIcon size={40} className="text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-700 font-medium">No drivers available for this service</p>
-              <p className="text-gray-500 mt-2">Try selecting a different service or check back later</p>
+              <p className="text-gray-700 font-medium">No drivers available with the selected filters</p>
+              <p className="text-gray-500 mt-2">Try adjusting your filters or selecting a different service</p>
               <button 
                 className="mt-4 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                onClick={() => {
-                  // Here you could navigate to a "post a job" page
-                  alert("This would navigate to the post a job page");
-                }}
+                onClick={resetFilters}
               >
-                Post a Job Request
+                Reset Filters
               </button>
             </div>
           ) : (
             <div className="space-y-4">
-              {availableDrivers.map((driver) => (
+              {filteredDrivers.map((driver) => (
                 <div key={driver._id} className="border border-gray-200 rounded-lg p-4 hover:border-green-300 transition duration-200">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center">
@@ -250,7 +376,7 @@ const ServicesPage = () => {
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                     <div className="flex items-center">
                       <MapPinIcon size={16} className="text-gray-400 mr-1 flex-shrink-0" />
-                      <span className="truncate">{driver.distance} • {driver.locations.join(', ')}</span>
+                      <span className="truncate"> • {driver.locations.join(', ')}</span>
                     </div>
                     <div>
                       <span className="font-medium">Experience:</span> {driver.experience}
@@ -261,19 +387,19 @@ const ServicesPage = () => {
                     </div>
                   </div>
                   
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
+                  <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                     <div>
                       <span className="font-medium">Vehicle:</span> {driver.vehicleType}
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <span className="font-medium">Services:</span> {driver.services.join(', ')}
+                    </div>
+                    <div>
+                      <span className="font-medium">Available Times:</span> {driver.availableTimes.join(', ')}
                     </div>
                   </div>
                   
                   <div className="mt-4 flex justify-end">
-                    <button className="bg-gray-100 text-gray-600 hover:bg-gray-200 px-4 py-2 rounded-md mr-3">
-                      View Profile
-                    </button>
                     <button 
                       className="bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-md"
                       onClick={() => handleBookNow(driver)}
