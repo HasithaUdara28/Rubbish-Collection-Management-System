@@ -49,7 +49,7 @@ const Home = () => {
     }
   ];
 
-  // Toggle accordion function
+  
   const toggleAccordion = (index) => {
     setOpenAccordion(openAccordion === index ? null : index);
   };
@@ -88,18 +88,18 @@ const Home = () => {
 
   
 
-  {/* Card Container - Makes Cards Cover Full Width */}
+  
 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
   
-  {/* Card 1 */}
+  
   <div className="bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-    <a href="#">
+    
       <img className="w-full h-60 object-cover rounded-t-lg" src="halftruck.jpg" alt="Service 1" />
-    </a>
+    
     <div className="p-5">
-      <a href="#">
+      
         <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Half Of Truck</h5>
-      </a>
+      
       <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">Ideal for small-scale rubbish removal, perfect for clearing out minimal waste efficiently.</p>
       <a 
         onClick={() => navigate('/services', { state: { selectedService: 'Half Truck' } })}
@@ -113,15 +113,15 @@ const Home = () => {
     </div>
   </div>
 
-  {/* Card 2 */}
+  
   <div className="bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-    <a href="#">
+    
       <img className="w-full h-60 object-cover rounded-t-lg" src="fulltruck.jpg" alt="Service 2" />
-    </a>
+    
     <div className="p-5">
-      <a href="#">
+      
         <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Full of Truck</h5>
-      </a>
+      
       <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">A complete truckload service for larger waste disposal needs, ensuring a hassle-free cleanup.</p>
       <a 
         onClick={() => navigate('/services', { state: { selectedService: 'Full Truck' } })}
@@ -135,15 +135,15 @@ const Home = () => {
     </div>
   </div>
 
-  {/* Card 3 */}
+  
   <div className="bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-    <a href="#">
+    
       <img className="w-full h-60 object-cover rounded-t-lg" src="moretruck.jpg" alt="Service 3" />
-    </a>
+    
     <div className="p-5">
-      <a href="#">
+      
         <h5 className="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">More Than One Truck</h5>
-      </a>
+      
       <p className="mb-3 font-normal text-gray-700 dark:text-gray-400">Designed for bulk waste removal, accommodating extensive rubbish collection requirements.</p>
       <a 
         onClick={() => navigate('/services', { state: { selectedService: 'More Than Truck' } })}
@@ -163,19 +163,19 @@ const Home = () => {
 <section className="py-32 bg-white overflow-hidden">
   <div className="container px-4 mx-auto">
     <div className="flex flex-wrap lg:items-center -m-8">
-      {/* Image Section */}
+      
       <div className="w-full md:w-1/2 p-8">
         <img className="mx-auto transform hover:-translate-y-4 transition ease-in-out duration-1000 w-full h-auto" src="laptops.png" />
       </div>
 
-      {/* Steps Section */}
+      
       <div className="w-full md:w-1/2 p-8">
         <h2 className="mb-20 text-4xl md:text-6xl font-bold font-heading tracking-px-n leading-tight md:max-w-lg">
           How Our Rubbish Collection System Works
         </h2>
 
         <div className="flex flex-wrap -m-1.5">
-          {/* Step 1: Select a Package */}
+          
           <div className="w-full p-1.5">
             <div className="flex flex-wrap -m-6">
               <div className="w-auto p-6">
@@ -192,7 +192,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Step 2: Choose a Driver */}
+          
           <div className="w-full p-1.5">
             <div className="flex flex-wrap -m-6">
               <div className="w-auto p-6">
@@ -209,7 +209,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Step 3: Schedule Pickup */}
+          
           <div className="w-full p-1.5">
             <div className="flex flex-wrap -m-6">
               <div className="w-auto p-6">
@@ -226,7 +226,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Step 4: Make Payment */}
+          
           <div className="w-full p-1.5">
             <div className="flex flex-wrap -m-6">
               <div className="w-auto p-6">
@@ -243,7 +243,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Step 5: Track Collection */}
+         
           <div className="w-full p-1.5">
             <div className="flex flex-wrap -m-6">
               <div className="w-auto p-6">
@@ -260,7 +260,7 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Step 6: Receive Confirmation */}
+          
           <div className="w-full p-1.5">
             <div className="flex flex-wrap -m-6">
               <div className="w-auto p-6">
@@ -343,23 +343,7 @@ const Home = () => {
   </div>
 </section>
 <Footer/>
-    {/* <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      {userDetails ? (
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-green-600">
-            Welcome, {userDetails.name}!
-          </h1>
-          <p className="text-lg text-gray-700 mt-4">
-            Your role: <span className="font-semibold">{userDetails.role}</span>
-          </p>
-          <p className="text-lg text-gray-700 mt-2">
-            User ID: <span className="font-mono">{userDetails.id}</span>
-          </p>
-        </div>
-      ) : (
-        <p className="text-xl text-gray-600">Loading user details...</p>
-      )}
-    </div> */}
+    
 
     
     </div>

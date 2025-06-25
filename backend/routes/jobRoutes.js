@@ -6,28 +6,28 @@ import mongoose from "mongoose";
 
 const router = express.Router();
 
-// Route to create a new job
+
 router.post('/create', authenticateToken, async (req, res) => {
   try {
-    // Destructure and validate request body
+    
     const { 
       jobType, 
       pickupLocation,
-      pickupTime, // Add this new field
+      pickupTime, 
       description, 
       estimatedPrice
     } = req.body;
 
     const customerId = req.user.id;
     
-    // Validate required fields
-    if (!jobType || !pickupLocation || !pickupTime) { // Add pickupTime validation
+    
+    if (!jobType || !pickupLocation || !pickupTime) { 
       return res.status(400).json({ 
         message: 'Job type, pickup location, and pickup time are required' 
       });
     }
 
-    // Validate pickup time (ensure it's in the future)
+    
     const pickupTimeDate = new Date(pickupTime);
     if (isNaN(pickupTimeDate.getTime()) || pickupTimeDate < new Date()) {
       return res.status(400).json({
@@ -35,7 +35,7 @@ router.post('/create', authenticateToken, async (req, res) => {
       });
     }
 
-    // Validate estimatedPrice if provided
+    
     const price = estimatedPrice ? parseFloat(estimatedPrice) : null;
     if (price !== null && isNaN(price)) {
       return res.status(400).json({ 
@@ -43,21 +43,21 @@ router.post('/create', authenticateToken, async (req, res) => {
       });
     }
 
-    // Create new job
+   
     const newJob = new Job({
       customerId,
       jobType,
       pickupLocation: pickupLocation.trim(),
-      pickupTime: pickupTimeDate, // Add the pickup time
+      pickupTime: pickupTimeDate, 
       description: description || '',
       estimatedPrice: price,
-      status: 'posted', // Use model's default status
+      status: 'posted',
     });
 
-    // Save job to database
+   
     const savedJob = await newJob.save();
 
-    // Respond with created job
+    
     res.status(201).json({
       message: 'Job created successfully',
       job: savedJob
@@ -66,7 +66,7 @@ router.post('/create', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Job Creation Error:', error);
 
-    // Handle specific error types
+    
     if (error.name === 'ValidationError') {
       return res.status(400).json({
         message: 'Validation Error',
@@ -74,7 +74,7 @@ router.post('/create', authenticateToken, async (req, res) => {
       });
     }
 
-    // Generic server error
+    
     res.status(500).json({ 
       message: 'Internal server error',
       error: error.message 
@@ -82,12 +82,12 @@ router.post('/create', authenticateToken, async (req, res) => {
   }
 });
 
-// Route to get customer's jobs
+
 router.get('/my-jobs', authenticateToken, async (req, res) => {
   try {
     const customerId = req.user.id;
     const jobs = await Job.find({ customerId })
-    .sort({ createdAt: -1 }); // Sort by most recent first
+    .sort({ createdAt: -1 }); 
 
     res.status(200).json(jobs);
   } catch (error) {
@@ -99,7 +99,7 @@ router.get('/my-jobs', authenticateToken, async (req, res) => {
   }
 });
 
-// Route to get a specific job by ID
+
 router.get('/:jobId', authenticateToken, async (req, res) => {
   try {
     const job = await Job.findOne({ 
@@ -123,20 +123,19 @@ router.get('/:jobId', authenticateToken, async (req, res) => {
   }
 });
 
-// Route to update a job
-// Route to update a job
+
 router.put('/:jobId', authenticateToken, async (req, res) => {
   try {
     const { jobId } = req.params;
     const { 
       jobType, 
       pickupLocation,
-      pickupTime, // Add this field 
+      pickupTime, 
       description, 
       estimatedPrice 
     } = req.body;
 
-    // Validate pickup time if provided
+    
     let pickupTimeDate;
     if (pickupTime) {
       pickupTimeDate = new Date(pickupTime);
@@ -147,23 +146,23 @@ router.put('/:jobId', authenticateToken, async (req, res) => {
       }
     }
 
-    // Find and update the job
+    
     const updatedJob = await Job.findOneAndUpdate(
       { 
         _id: jobId, 
         customerId: req.user.userId,
-        status: 'posted' // Only allow updates to jobs in 'posted' status
+        status: 'posted' 
       }, 
       { 
         jobType, 
         pickupLocation, 
-        pickupTime: pickupTimeDate, // Add this field
+        pickupTime: pickupTimeDate, 
         description, 
         estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : null
       },
       { 
-        new: true, // Return the updated document
-        runValidators: true // Run model validations
+        new: true, 
+        runValidators: true 
       }
     );
 
@@ -186,23 +185,23 @@ router.put('/:jobId', authenticateToken, async (req, res) => {
   }
 });
 
-// Route to cancel a job
+
 router.put('/:jobId/cancel', authenticateToken, async (req, res) => {
   try {
     const { jobId } = req.params;
 
-    // Find and update the job
+   
     const job = await Job.findOneAndUpdate(
       { 
         _id: jobId, 
         customerId: req.user.userId,
-        status: { $in: ['posted', 'accepted'] } // Only cancel jobs in these statuses
+        status: { $in: ['posted', 'accepted'] } 
       }, 
       { 
         status: 'cancelled' 
       },
       { 
-        new: true // Return the updated document
+        new: true
       }
     );
 
@@ -231,7 +230,7 @@ router.get('/', async (req, res) => {
   
       const queryConditions = {};
   
-      // Apply filters
+      
       if (jobType) queryConditions.jobType = jobType;
       if (minPrice || maxPrice) {
         queryConditions.estimatedPrice = {};
@@ -240,11 +239,11 @@ router.get('/', async (req, res) => {
       }
       if (location) queryConditions.pickupLocation = { $regex: location, $options: 'i' };
   
-      // Fetch jobs from the database
+      
       const jobs = await Job.find(queryConditions)
         .populate('customerId', 'name')
         .populate('driverId', 'name')
-        .populate('driversApplied', 'name') // Populate the drivers who applied
+        .populate('driversApplied', 'name') 
         .sort({ createdAt: -1 });
   
       res.json({ jobs });
@@ -257,16 +256,16 @@ router.get('/', async (req, res) => {
   router.post('/:jobId/bid', authenticateToken, async (req, res) => {
     try {
       const { jobId } = req.params;
-      const driverId = req.user.id; // Assuming the authenticated user is a driver
+      const driverId = req.user.id; 
   
-      // Validate job ID
+      
       if (!mongoose.Types.ObjectId.isValid(jobId)) {
         return res.status(400).json({ 
           message: 'Invalid job ID' 
         });
       }
   
-      // Find the job
+     
       const job = await Job.findById(jobId);
   
       if (!job) {
@@ -275,24 +274,24 @@ router.get('/', async (req, res) => {
         });
       }
   
-      // Check if job is in a state that allows bidding
+      
       if (job.status !== 'posted' && job.status !== 'bidding') {
         return res.status(400).json({ 
           message: 'This job is not currently accepting bids' 
         });
       }
   
-      // Check if driver has already applied
+      
       if (job.driversApplied.includes(driverId)) {
         return res.status(400).json({ 
           message: 'You have already applied to this job' 
         });
       }
   
-      // Update job with driver's bid
+      
       job.driversApplied.push(driverId);
       
-      // Change job status to 'bidding' if not already
+      
       if (job.status === 'posted') {
         job.status = 'bidding';
       }
@@ -317,18 +316,18 @@ router.get('/', async (req, res) => {
     try {
       const { jobId } = req.params;
   
-      // Validate job ID
+      
       if (!mongoose.Types.ObjectId.isValid(jobId)) {
         return res.status(400).json({ 
           message: 'Invalid job ID' 
         });
       }
   
-      // Find the job and populate applied drivers
+      
       const job = await Job.findById(jobId)
         .populate({
           path: 'driversApplied',
-          select: 'name email phone rating' // Select specific driver fields
+          select: 'name email phone rating' 
         });
   
       if (!job) {
@@ -359,14 +358,14 @@ router.get('/', async (req, res) => {
       const { driverId } = req.body;
       const customerId = req.user.id;
   
-      // Validate job ID and driver ID
+      
       if (!mongoose.Types.ObjectId.isValid(jobId) || !mongoose.Types.ObjectId.isValid(driverId)) {
         return res.status(400).json({ 
           message: 'Invalid job or driver ID' 
         });
       }
   
-      // Find the job
+      
       const job = await Job.findOne({ 
         _id: jobId, 
         customerId: customerId 
@@ -378,28 +377,27 @@ router.get('/', async (req, res) => {
         });
       }
   
-      // Check if the driver has applied to this job
+     
       if (!job.driversApplied.includes(driverId)) {
         return res.status(400).json({ 
           message: 'Selected driver has not applied to this job' 
         });
       }
   
-      // Check job status
+      
       if (job.status !== 'posted' && job.status !== 'bidding') {
         return res.status(400).json({ 
           message: 'Job cannot be assigned at this stage' 
         });
       }
   
-      // Update job with selected driver
+      
       job.driverId = driverId;
       job.status = 'accepted';
   
       await job.save();
   
-      // Optionally, you might want to notify the driver
-      // This would typically involve a separate notification service
+      
   
       res.status(200).json({
         message: 'Driver selected successfully',
@@ -421,19 +419,19 @@ router.get('/', async (req, res) => {
 
   router.get('/driver/accepted-jobs', authenticateToken, async (req, res) => {
     try {
-      // Debugging - Print the whole user object from the token
+      
       console.log('User from token:', req.user);
       
-      // Check if user exists and has an _id
+      
       if (!req.user) {
         return res.status(400).json({ message: 'User information not found in token' });
       }
       
-      // Extract the driver ID from the token - check both _id and id fields
+      
       const driverId = req.user._id || req.user.id;
       console.log('Driver ID from token:', driverId);
       
-      // If no driver ID was found, return an error
+      
       if (!driverId) {
         return res.status(400).json({ 
           message: 'Driver ID not found in token',
@@ -441,7 +439,7 @@ router.get('/', async (req, res) => {
         });
       }
       
-      // Get jobs with this driver ID
+      
       const acceptedJobs = await Job.find({ 
         driverId: driverId, 
         status: 'accepted' 
@@ -449,7 +447,7 @@ router.get('/', async (req, res) => {
       
       console.log('Found jobs:', acceptedJobs.length);
       
-      // Return the jobs found
+      
       res.json({ 
         acceptedJobs,
         message: acceptedJobs.length ? 'Jobs found' : 'No accepted jobs' 
@@ -468,18 +466,18 @@ router.get('/', async (req, res) => {
       const { jobId } = req.params;
       const driverId = req.user.id;
   
-      // Validate job ID
+      
       if (!mongoose.Types.ObjectId.isValid(jobId)) {
         return res.status(400).json({ 
           message: 'Invalid job ID' 
         });
       }
   
-      // Find the job
+      
       const job = await Job.findOne({ 
         _id: jobId, 
         driverId: driverId,
-        status: 'accepted' // Only accepted jobs can be completed
+        status: 'accepted' 
       });
   
       if (!job) {
@@ -488,7 +486,7 @@ router.get('/', async (req, res) => {
         });
       }
   
-      // Update job status to completed
+      
       job.status = 'completed';
       await job.save();
   
@@ -513,7 +511,7 @@ router.get('/', async (req, res) => {
     try {
       const driverId = req.user.id;
       
-      // Get completed jobs for this driver
+      
       const completedJobs = await Job.find({ 
         driverId: driverId, 
         status: 'completed' 
@@ -531,4 +529,5 @@ router.get('/', async (req, res) => {
       });
     }
   });
+  
 export default router;

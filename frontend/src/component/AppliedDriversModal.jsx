@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, User, Star, Phone, Mail, CreditCard } from 'lucide-react';
 import DriverSelectionModal from './DriverSelectionModal';
-import PaymentModal from './PaymentModal'; // You'll need to create this component
+import PaymentModal from './PaymentModal'; 
 
 const AppliedDriversModal = ({ job, onClose }) => {
   const [selectedJob, setSelectedJob] = useState(null);
@@ -31,7 +31,7 @@ const AppliedDriversModal = ({ job, onClose }) => {
         });
 
         setSelectedJob(job);
-        setAppliedDrivers(response.data.driversApplied || []); // Add fallback to empty array
+        setAppliedDrivers(response.data.driversApplied || []); 
         setLoading(false);
       } catch (err) {
         console.error('Error fetching applied drivers:', err);
@@ -46,7 +46,7 @@ const AppliedDriversModal = ({ job, onClose }) => {
   }, [job]);
 
   const handleDriverSelection = (updatedJob) => {
-    // Update the job status locally
+    
     setSelectedJob({
       ...selectedJob,
       status: 'accepted',
@@ -54,8 +54,8 @@ const AppliedDriversModal = ({ job, onClose }) => {
     });
     
     setShowDriverSelection(false);
-    // Notify parent component of the change
-    onClose(true); // Pass true to indicate the job was updated
+    
+    onClose(true); 
   };
 
   const renderStarRating = (rating) => {
@@ -72,7 +72,7 @@ const AppliedDriversModal = ({ job, onClose }) => {
   };
 
   const handleSelectDriver = (driver) => {
-    // Only allow selection when job is in "posted" status
+    
     if (job.status === 'posted' || job.status === 'bidding') {
       setSelectedDriver(driver);
       setShowDriverSelection(true);
@@ -85,19 +85,19 @@ const AppliedDriversModal = ({ job, onClose }) => {
 
   const handlePaymentComplete = () => {
     setShowPaymentModal(false);
-    onClose(true); // Refresh job list on payment completion
+    onClose(true); 
   };
 
-  // Check if job is in a state where driver selection is disabled
+  
   const isDriverSelectionDisabled = job.status === 'accepted' || job.status === 'completed' || job.status === 'cancelled';
   
-  // Check if we can show the payment button (only when status is "accepted")
+  
   const showPaymentButton = job.status === 'accepted';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* Modal Header */}
+        
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">Job Details and Applied Drivers</h2>
           <button 
@@ -108,7 +108,7 @@ const AppliedDriversModal = ({ job, onClose }) => {
           </button>
         </div>
 
-        {/* Job Details Section */}
+        
         <div className="p-6 bg-gray-50 border-b border-gray-200">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -144,7 +144,7 @@ const AppliedDriversModal = ({ job, onClose }) => {
           )}
         </div>
 
-        {/* Applied Drivers Section */}
+        
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold text-gray-800">
@@ -228,7 +228,7 @@ const AppliedDriversModal = ({ job, onClose }) => {
           )}
         </div>
 
-        {/* Driver Selection Modal */}
+        
         {showDriverSelection && (
           <DriverSelectionModal 
             job={selectedJob}
@@ -238,7 +238,7 @@ const AppliedDriversModal = ({ job, onClose }) => {
           />
         )}
 
-        {/* Payment Modal */}
+        
         {showPaymentModal && (
           <PaymentModal 
             job={selectedJob}

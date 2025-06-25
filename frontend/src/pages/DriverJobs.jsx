@@ -23,7 +23,7 @@ const DriverJobs = () => {
         return;
       }
 
-      // Fetch both accepted and completed jobs
+      
       const responses = await Promise.all([
         axios.get('http://localhost:5555/jobs/driver/accepted-jobs', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -68,10 +68,10 @@ const DriverJobs = () => {
         }
       });
 
-      // Find the completed job
+      
       const completedJob = acceptedJobs.find(job => job._id === jobId);
       
-      // Update states
+      
       setAcceptedJobs(prevJobs => prevJobs.filter(job => job._id !== jobId));
       setCompletedJobs(prevJobs => [{ ...completedJob, status: 'completed' }, ...prevJobs]);
       
@@ -175,7 +175,7 @@ const DriverJobs = () => {
     <div className="container mx-auto p-4">
       <h2 className="text-2xl font-bold mb-6">My Jobs</h2>
       
-      {/* Accepted Jobs Section */}
+      
       <div className="mb-12">
         <div className="flex items-center mb-4">
           <h3 className="text-xl font-semibold">Active Jobs</h3>
@@ -195,7 +195,7 @@ const DriverJobs = () => {
         )}
       </div>
       
-      {/* Completed Jobs Section */}
+      
       <div>
         <div className="flex items-center mb-4">
           <h3 className="text-xl font-semibold">Completed Jobs</h3>

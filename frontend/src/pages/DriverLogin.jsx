@@ -40,7 +40,7 @@ const DriverLogin = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
       <div className="w-full max-w-4xl flex overflow-hidden rounded-2xl shadow-xl">
-        {/* Left side - Image/Illustration */}
+        
         <div className="hidden md:block w-1/2 bg-green-600 p-8 text-white relative">
           <div className="absolute top-8 left-8">
             <h2 className="text-3xl font-bold">EcoCollect</h2>
@@ -64,7 +64,7 @@ const DriverLogin = () => {
           </div>
         </div>
         
-        {/* Right side - Login Form */}
+        
         <div className="w-full md:w-1/2 bg-white p-8">
           <div className="mb-8 text-center">
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Driver Login</h1>

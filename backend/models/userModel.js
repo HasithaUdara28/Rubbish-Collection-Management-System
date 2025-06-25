@@ -15,7 +15,7 @@ const userSchema = mongoose.Schema(
     }
 );
 
-// Hash the password before saving to the database
+
 userSchema.pre('save', async function(next) {
     if (!this.isModified('password')) return next();
     const salt = await bcrypt.genSalt(10);
@@ -23,12 +23,12 @@ userSchema.pre('save', async function(next) {
     next();
 });
 
-// Compare password method
+
 userSchema.methods.comparePassword = async function(password) {
     return await bcrypt.compare(password, this.password);
 };
 
-// Generate JWT Token
+
 userSchema.methods.generateAuthToken = function() {
     return jwt.sign({ id: this._id, role: this.role, name: this.name }, 'your_secret_key_here', { expiresIn: '1h' });
 };

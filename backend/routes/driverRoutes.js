@@ -67,7 +67,7 @@ router.post('/login', async (req, res) => {
     }
 });
 
-// Admin Verification Route
+
 router.put('/drivers/:id/verify', async (req, res) => {
     try {
         const { id } = req.params;
@@ -84,7 +84,7 @@ router.put('/drivers/:id/verify', async (req, res) => {
     }
 });
 
-// Update driver availability
+
 router.put('/drivers/:id/availability', async (req, res) => {
     try {
         const { availability } = req.body;
@@ -103,7 +103,7 @@ router.put('/drivers/:id/availability', async (req, res) => {
     }
 });
 
-// Update driver services & locations
+
 router.put('/drivers/:id/update', async (req, res) => {
     try {
         const { services, locations } = req.body;
@@ -129,7 +129,7 @@ router.put('/drivers/:id/update', async (req, res) => {
     }
 });
 
-// Get all drivers
+
 router.get('/drivers', async (req, res) => {
     try {
         const drivers = await Driver.find({});
@@ -140,7 +140,7 @@ router.get('/drivers', async (req, res) => {
     }
 });
 
-// Get a single driver by ID
+
 router.get('/drivers/:id', async (req, res) => {
     try {
         const driver = await Driver.findById(req.params.id);

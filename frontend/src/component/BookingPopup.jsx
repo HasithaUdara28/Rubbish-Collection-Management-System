@@ -57,13 +57,13 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
       [name]: value
     });
 
-    // Clear time slot error when date or time changes
+    
     if (name === 'date' || name === 'startTime') {
       setTimeSlotError(null);
     }
   };
 
-  // Check if a time slot is available
+  
   const checkTimeSlotAvailability = () => {
     if (!formData.date || !formData.startTime) return true;
 
@@ -71,15 +71,15 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
     setTimeSlotError(null);
 
     try {
-      // Create date objects for the requested booking
+      
       const requestedStartTime = new Date(`${formData.date}T${formData.startTime}:00`);
       const serviceDuration = getServiceDuration(service);
       const requestedEndTime = new Date(requestedStartTime);
       requestedEndTime.setHours(requestedStartTime.getHours() + serviceDuration);
 
-      // Check for conflicts with existing bookings
+      
       for (const booking of existingBookings) {
-        // Skip bookings that are cancelled or completed
+        
         if (booking.status === 'cancelled' || booking.status === 'completed') {
           continue;
         }
@@ -87,7 +87,7 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
         const existingStartTime = new Date(booking.startTime);
         const existingEndTime = new Date(booking.endTime);
 
-        // Check for overlap
+        
         if (
           (requestedStartTime >= existingStartTime && requestedStartTime < existingEndTime) ||
           (requestedEndTime > existingStartTime && requestedEndTime <= existingEndTime) ||
@@ -108,11 +108,11 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
     } catch (err) {
       console.error('Error checking time slot availability:', err);
       setIsCheckingAvailability(false);
-      return true; // Allow booking if check fails
+      return true; 
     }
   };
 
-  // Check availability when date or time changes
+  
   useEffect(() => {
     if (formData.date && formData.startTime) {
       checkTimeSlotAvailability();
@@ -122,7 +122,7 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Check time slot availability before proceeding
+    
     if (!checkTimeSlotAvailability()) {
       return;
     }
@@ -131,7 +131,7 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
     setError(null);
 
     try {
-      // Get the token from sessionStorage
+      
       const token = sessionStorage.getItem('token');
       
       if (!token) {
@@ -140,7 +140,7 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
         return;
       }
 
-      // Format the date and time for API
+      
       const combinedDateTime = `${formData.date}T${formData.startTime}:00.000Z`;
 
       const bookingData = {
@@ -175,7 +175,7 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
     }
   };
 
-  // Calculate min and max date for date picker (current date to 24 hours ahead)
+  
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
@@ -249,7 +249,7 @@ const BookingPopup = ({ driver, service, onClose, onSuccess }) => {
                 />
               </div>
               
-              {/* Time slot availability warning */}
+              
               {timeSlotError && (
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-start">
                   <AlertCircle size={16} className="text-yellow-500 mr-2 mt-0.5 flex-shrink-0" />

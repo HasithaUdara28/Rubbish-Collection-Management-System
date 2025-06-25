@@ -24,11 +24,11 @@ const CustomerDashboard = () => {
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
         setUserDetails(decodedToken);
         
-        // Fetch bookings after setting user details
+        
         fetchBookings(token);
       } catch (error) {
         console.error("Error decoding token:", error);
-        navigate("/"); // Redirect to login on error
+        navigate("/"); 
       }
     }
   }, [navigate]);
@@ -42,17 +42,18 @@ const CustomerDashboard = () => {
         }
       });
       
-      // Separate bookings into upcoming and completed
+      
       const completed = response.data.filter(booking => booking.status === 'completed');
       const upcoming = response.data.filter(booking => booking.status !== 'completed');
       
-      // Sort upcoming bookings with confirmed and pending statuses first
+      
       const sortedUpcoming = upcoming.sort((a, b) => {
         const statusOrder = { 'confirmed': 1, 'pending': 2, 'cancelled': 3 };
         return statusOrder[a.status.toLowerCase()] - statusOrder[b.status.toLowerCase()];
       });
 
       setUpcomingBookings(sortedUpcoming);
+      console.log(sortedUpcoming);
       setCompletedBookings(completed);
       setLoading(false);
     } catch (error) {
@@ -66,7 +67,7 @@ const CustomerDashboard = () => {
     const booking = upcomingBookings.find(b => b._id === bookingId);
     if (booking && booking.status === 'confirmed') {
       console.log(`Initiating payment for booking ${bookingId}`);
-      // Add payment logic here
+      navigate('/payment');
     }
   };
 
@@ -79,15 +80,14 @@ const CustomerDashboard = () => {
             }
         });
         
-        // Show success message
-        // You could use a toast notification library here
+        
         alert("Booking cancelled successfully");
         
-        // Refresh bookings after cancellation
+        
         fetchBookings(token);
     } catch (error) {
         console.error("Error cancelling booking:", error);
-        // Show error message from server
+        
         if (error.response && error.response.data && error.response.data.message) {
             alert(error.response.data.message);
         } else {
@@ -96,7 +96,7 @@ const CustomerDashboard = () => {
     }
 };
 
-// Helper function to check if booking is cancellable
+
 const isBookingCancellable = (booking) => {
   if (!['confirmed', 'pending'].includes(booking.status)) {
       return false;
@@ -110,12 +110,12 @@ const isBookingCancellable = (booking) => {
 };
 
   const handleLogout = () => {
-    // Clear token and redirect to login
+    
     sessionStorage.removeItem("token");
     navigate("/");
   };
 
-  // If loading, show a loading state
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -127,7 +127,7 @@ const isBookingCancellable = (booking) => {
     );
   }
 
-  // If error, show error message
+ 
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -146,10 +146,12 @@ const isBookingCancellable = (booking) => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+      
       <div className="w-64 bg-white border-r border-gray-200">
         <div className="p-4 bg-green-600">
+          <a href="/home">
           <h2 className="text-2xl font-bold text-white">EcoCollect</h2>
+          </a>
         </div>
         
         <div className="p-4">
@@ -288,64 +290,68 @@ const isBookingCancellable = (booking) => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {upcomingBookings.map((booking) => (
-                        <tr key={booking._id}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="font-medium text-gray-900">{booking.service}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-gray-900">{new Date(booking.date).toLocaleDateString()}</div>
-                            <div className="text-gray-500 text-sm">{new Date(booking.startTime).toLocaleTimeString()}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="text-gray-900">{booking.location}</span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
-                              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {booking.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
-                            <button className="text-green-600 hover:text-green-900">View Details</button>
-                            <button 
-                              className={`text-blue-600 ${
-                                booking.status === 'confirmed' 
-                                  ? 'hover:text-blue-900 cursor-pointer' 
-                                  : 'text-opacity-50 cursor-not-allowed'
-                              }`}
-                              onClick={() => handlePayBooking(booking._id)}
-                              disabled={booking.status !== 'confirmed'}
-                            >
-                              Pay
-                            </button>
-                            <button 
-    className={`text-red-600 ${
-        isBookingCancellable(booking) ? 'hover:text-red-900' : 'text-opacity-50 cursor-not-allowed'
-    }`}
-    onClick={() => isBookingCancellable(booking) && handleCancelBooking(booking._id)}
-    disabled={!isBookingCancellable(booking)}
->
-    Cancel
-</button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
+  {upcomingBookings.map((booking) => (
+    <tr key={booking._id}>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="font-medium text-gray-900">{booking.service}</span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="text-gray-900">{new Date(booking.date).toLocaleDateString()}</div>
+        <div className="text-gray-500 text-sm">{new Date(booking.startTime).toLocaleTimeString()}</div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="text-gray-900">{booking.location}</span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          booking.status === 'confirmed' ? 'bg-green-100 text-green-800' : 
+          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-red-100 text-red-800'
+        }`}>
+          {booking.status}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap"><span className="text-gray-600">
+          {booking.driverId && booking.driverId.name ? booking.driverId.name : 'Not assigned'}
+        </span></td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm space-x-3">
+        
+        <button 
+          className={`text-blue-600 ${
+            booking.status === 'confirmed' 
+              ? 'hover:text-blue-900 cursor-pointer' 
+              : 'text-opacity-50 cursor-not-allowed'
+          }`}
+          onClick={() => handlePayBooking(booking._id)}
+          disabled={booking.status !== 'confirmed'}
+        >
+          Pay
+        </button>
+        <button 
+          className={`text-red-600 ${
+            isBookingCancellable(booking) ? 'hover:text-red-900' : 'text-opacity-50 cursor-not-allowed'
+          }`}
+          onClick={() => isBookingCancellable(booking) && handleCancelBooking(booking._id)}
+          disabled={!isBookingCancellable(booking)}
+        >
+          Cancel
+        </button>
+      </td>
+    </tr>
+  ))}
+</tbody>
                   </table>
                 </div>
               </div>
               
              
               
-              {/* New Completed Bookings Section */}
+              
               {completedBookings.length > 0 && (
                 <div className="bg-white rounded-lg shadow">
                   <div className="p-4 border-b border-gray-200">
@@ -359,33 +365,35 @@ const isBookingCancellable = (booking) => {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Driver</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {completedBookings.map((booking) => (
-                          <tr key={booking._id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="font-medium text-gray-900">{booking.service}</span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-gray-900">{new Date(booking.date).toLocaleDateString()}</div>
-                              <div className="text-gray-500 text-sm">{new Date(booking.startTime).toLocaleTimeString()}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="text-gray-900">{booking.location}</span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                {booking.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              <button className="text-green-600 hover:text-green-900">View Details</button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
+  {completedBookings.map((booking) => (
+    <tr key={booking._id}>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="font-medium text-gray-900">{booking.service}</span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="text-gray-900">{new Date(booking.date).toLocaleDateString()}</div>
+        <div className="text-gray-500 text-sm">{new Date(booking.startTime).toLocaleTimeString()}</div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="text-gray-900">{booking.location}</span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          {booking.status}
+        </span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <span className="text-gray-600">
+          {booking.driverId && booking.driverId.name ? booking.driverId.name : 'Not assigned'}
+        </span>
+      </td>
+    </tr>
+  ))}
+</tbody>
                     </table>
                   </div>
                 </div>
@@ -393,7 +401,7 @@ const isBookingCancellable = (booking) => {
             </>
           )}
           
-          {/* Other tab content */}
+          
           {activeTab === 'bookings' && <JobsPage />}
           {activeTab === 'posts' && <PostJobPage />}
           {activeTab === 'payments' && <div><h2 className="text-xl font-semibold mb-4">Payment History</h2></div>}

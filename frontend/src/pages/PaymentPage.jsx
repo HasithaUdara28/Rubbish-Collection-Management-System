@@ -7,7 +7,7 @@ const PaymentPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   
-  // Sample booking details
+  
   const booking = {
     service: 'Full Truck',
     date: '2025-03-22',
@@ -24,7 +24,7 @@ const PaymentPage = () => {
     e.preventDefault();
     setIsProcessing(true);
     
-    // Simulate payment processing
+    
     setTimeout(() => {
       setIsProcessing(false);
       setIsComplete(true);
@@ -222,7 +222,7 @@ const PaymentPage = () => {
             </div>
           </div>
           
-          {/* Order Summary */}
+          
           <div className="md:col-span-1">
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Order Summary</h2>

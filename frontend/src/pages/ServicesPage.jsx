@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeftIcon, TruckIcon, StarIcon, MapPinIcon, PhoneIcon, UserIcon, FilterIcon, AlertCircleIcon, X, Clock, Calendar } from 'lucide-react';
+import { ArrowLeftIcon, TruckIcon, StarIcon, MapPinIcon, PhoneIcon, UserIcon, FilterIcon, AlertCircleIcon, X, Clock, Calendar, Search } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
@@ -17,23 +17,18 @@ const ServicesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // State for booking popup
+ 
   const [showBookingPopup, setShowBookingPopup] = useState(false);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [bookingData, setBookingData] = useState(null);
   
-  // Filter states
+  
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState('');
+  const [locationSearch, setLocationSearch] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [availableLocations, setAvailableLocations] = useState([]);
-  const [availableTimes, setAvailableTimes] = useState([
-    'Morning (8am-12pm)',
-    'Afternoon (12pm-5pm)',
-    'Evening (5pm-9pm)',
-    'Any Time'
-  ]);
+  
   
   const services = [
     {
@@ -67,40 +62,37 @@ const ServicesPage = () => {
       setLoading(true);
       setError(null);
       try {
-        // Fetch all drivers from your backend
+        
         const response = await axios.get('http://localhost:5555/drivers/drivers');
         
-        // Filter drivers based on selected service and availability
+        
         const filteredDrivers = response.data.filter(driver => 
           driver.verified && 
           driver.availability && 
           driver.services.includes(selectedService)
         );
         
-        // Add some UI-friendly properties for the frontend
+        
         const enhancedDrivers = filteredDrivers.map(driver => ({
           ...driver,
-          rating: (Math.random() * (5 - 4) + 4).toFixed(1), // Mock rating between 4.0-5.0
-          reviews: Math.floor(Math.random() * 200) + 20, // Mock reviews count
+          rating: (Math.random() * (5 - 4) + 4).toFixed(1), 
+          reviews: Math.floor(Math.random() * 200) + 20, 
           price: `$${driver.services.includes('More Than Truck') ? '280' : 
-                  driver.services.includes('Full Truck') ? '150' : '80'}`, // Price based on service
-          experience: `${Math.floor(Math.random() * 8) + 1} years`, // Mock experience
-          available: 'Now', // Mock availability time
-          availableTimes: generateMockTimes() // Add mock available times
+                  driver.services.includes('Full Truck') ? '150' : '80'}`, 
+          experience: `${Math.floor(Math.random() * 8) + 1} years`,
+          available: 'Now', 
         }));
         
         setAvailableDrivers(enhancedDrivers);
         setFilteredDrivers(enhancedDrivers);
         
-        // Extract all unique locations from drivers
+        
         const allLocations = enhancedDrivers
           .flatMap(driver => driver.locations || [])
           .filter((location, index, self) => self.indexOf(location) === index)
           .sort();
         
-        setAvailableLocations(['All Locations', ...allLocations]);
-        setSelectedLocation('All Locations');
-        setSelectedTime('Any Time');
+        setAvailableLocations(allLocations);
       } catch (err) {
         console.error('Error fetching drivers:', err);
         setError('Failed to load available drivers. Please try again later.');
@@ -112,47 +104,30 @@ const ServicesPage = () => {
     fetchDrivers();
   }, [selectedService]);
 
-  // Generate mock available times for drivers
-  const generateMockTimes = () => {
-    const times = [];
-    const timeSlots = ['Morning (8am-12pm)', 'Afternoon (12pm-5pm)', 'Evening (5pm-9pm)'];
-    
-    // Randomly select 1-3 time slots
-    const numSlots = Math.floor(Math.random() * 3) + 1;
-    const selectedSlots = [...timeSlots].sort(() => 0.5 - Math.random()).slice(0, numSlots);
-    
-    return selectedSlots;
-  };
-
-  // Apply filters
+  
   useEffect(() => {
     if (!availableDrivers.length) return;
     
     let filtered = [...availableDrivers];
     
-    // Apply location filter
-    if (selectedLocation && selectedLocation !== 'All Locations') {
-      filtered = filtered.filter(driver => 
-        driver.locations && driver.locations.includes(selectedLocation)
-      );
-    }
     
-    // Apply time filter
-    if (selectedTime && selectedTime !== 'Any Time') {
+    if (locationSearch.trim() !== '') {
+      const searchTerm = locationSearch.toLowerCase().trim();
       filtered = filtered.filter(driver => 
-        driver.availableTimes && driver.availableTimes.includes(selectedTime)
+        driver.locations && 
+        driver.locations.some(loc => loc.toLowerCase().includes(searchTerm))
       );
     }
     
     setFilteredDrivers(filtered);
-  }, [selectedLocation, selectedTime, availableDrivers]);
+  }, [locationSearch, availableDrivers]);
 
-  // Handle booking button click
+  
   const handleBookNow = (driver) => {
-    // Check if user is logged in using sessionStorage instead of localStorage
+    
     const token = sessionStorage.getItem('token');
     if (!token) {
-      // Redirect to login page
+      
       navigate('/', { 
         state: { 
           redirectAfterLogin: '/services',
@@ -166,35 +141,34 @@ const ServicesPage = () => {
     setShowBookingPopup(true);
   };
 
-  // Handle successful booking
+  
   const handleBookingSuccess = (data) => {
     setBookingData(data);
     setBookingSuccess(true);
     setShowBookingPopup(false);
     
-    // You could reset this after a few seconds to allow for more bookings
+    
     setTimeout(() => {
       setBookingSuccess(false);
       setBookingData(null);
     }, 5000);
   };
 
-  // Toggle filters visibility
+  
   const toggleFilters = () => {
     setShowFilters(!showFilters);
   };
 
-  // Reset filters
+  
   const resetFilters = () => {
-    setSelectedLocation('All Locations');
-    setSelectedTime('Any Time');
+    setLocationSearch('');
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar/>
       
-      {/* Booking Success Message */}
+      
       {bookingSuccess && (
         <div className="fixed top-20 right-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-md z-50 max-w-md">
           <div className="flex">
@@ -214,7 +188,7 @@ const ServicesPage = () => {
       )}
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Services Selection */}
+        
         <h1 className="text-2xl font-bold text-gray-800 mb-6">Select a Service</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -246,7 +220,7 @@ const ServicesPage = () => {
           ))}
         </div>
         
-        {/* Available Drivers Section */}
+        
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Available Drivers for {selectedService}</h2>
@@ -260,14 +234,14 @@ const ServicesPage = () => {
                 onClick={toggleFilters}
               >
                 <FilterIcon size={20} className="text-gray-500" />
-                {(selectedLocation !== 'All Locations' || selectedTime !== 'Any Time') && (
+                {(locationSearch !== '') && (
                   <span className="absolute -top-1 -right-1 bg-green-500 rounded-full w-3 h-3"></span>
                 )}
               </button>
             </div>
           </div>
           
-          {/* Filters Panel */}
+          
           {showFilters && (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
               <div className="flex justify-between items-center mb-3">
@@ -280,41 +254,43 @@ const ServicesPage = () => {
                 </button>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Location Filter */}
-                <div>
-                  <label htmlFor="location-filter" className="block text-sm font-medium text-gray-700 mb-1">
-                    <MapPinIcon size={16} className="inline mr-1" />
-                    Location
-                  </label>
-                  <select 
-                    id="location-filter"
-                    value={selectedLocation}
-                    onChange={(e) => setSelectedLocation(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                  >
-                    {availableLocations.map(loc => (
-                      <option key={loc} value={loc}>{loc}</option>
-                    ))}
-                  </select>
-                </div>
+              <div className="grid grid-cols-1 gap-4">
                 
-                {/* Time Availability Filter */}
                 <div>
-                  <label htmlFor="time-filter" className="block text-sm font-medium text-gray-700 mb-1">
-                    <Clock size={16} className="inline mr-1" />
-                    Time Availability
+                  <label htmlFor="location-search" className="block text-sm font-medium text-gray-700 mb-1">
+                    <MapPinIcon size={16} className="inline mr-1" />
+                    Search Location
                   </label>
-                  <select 
-                    id="time-filter"
-                    value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                  >
-                    {availableTimes.map(time => (
-                      <option key={time} value={time}>{time}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <input 
+                      type="text"
+                      id="location-search"
+                      value={locationSearch}
+                      onChange={(e) => setLocationSearch(e.target.value)}
+                      placeholder="Enter location name"
+                      className="w-full p-2 pl-10 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    />
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search size={16} className="text-gray-400" />
+                    </div>
+                    {locationSearch && (
+                      <button 
+                        onClick={() => setLocationSearch('')}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                  {locationSearch && availableLocations.some(loc => loc.toLowerCase().includes(locationSearch.toLowerCase())) && (
+                    <div className="mt-2 text-xs text-gray-500">
+                      Available locations: {availableLocations
+                        .filter(loc => loc.toLowerCase().includes(locationSearch.toLowerCase()))
+                        .slice(0, 3)
+                        .join(', ')}
+                      {availableLocations.filter(loc => loc.toLowerCase().includes(locationSearch.toLowerCase())).length > 3 && '...'}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -394,9 +370,6 @@ const ServicesPage = () => {
                     <div>
                       <span className="font-medium">Services:</span> {driver.services.join(', ')}
                     </div>
-                    <div>
-                      <span className="font-medium">Available Times:</span> {driver.availableTimes.join(', ')}
-                    </div>
                   </div>
                   
                   <div className="mt-4 flex justify-end">
@@ -415,7 +388,7 @@ const ServicesPage = () => {
       </main>
       <Footer/>
       
-      {/* Booking Popup */}
+      
       {showBookingPopup && selectedDriver && (
         <BookingPopup 
           driver={selectedDriver}

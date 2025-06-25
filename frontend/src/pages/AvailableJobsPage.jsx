@@ -3,14 +3,15 @@ import { TruckIcon, MapPinIcon, CalendarIcon, DollarSignIcon } from 'lucide-reac
 import axios from 'axios';
 
 const AvailableJobsPage = () => {
-  const [availableJobs, setAvailableJobs] = useState([]);  // Initialize as an empty array
+  const [availableJobs, setAvailableJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     jobType: '',
     minPrice: '',
     maxPrice: '',
-    location: ''
+    location: '',
+    status: 'posted' 
   });
 
   useEffect(() => {
@@ -26,11 +27,12 @@ const AvailableJobsPage = () => {
           headers: {
             'Authorization': `Bearer ${token}`
           },
-          params: filters // Send filters to backend
+          params: filters 
         });
 
-        // Ensure availableJobs is always an array
-        setAvailableJobs(response.data.jobs || []);
+
+        const postedJobs = (response.data.jobs || []).filter(job => job.status === 'posted');
+        setAvailableJobs(postedJobs);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching available jobs:", err);
@@ -63,7 +65,8 @@ const AvailableJobsPage = () => {
     const { name, value } = e.target;
     setFilters(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
+      status: 'posted' 
     }));
   };
 
@@ -96,7 +99,7 @@ const AvailableJobsPage = () => {
 
   return (
     <div className="p-6">
-      {/* Filters */}
+      
       <div className="mb-6 bg-white rounded-lg shadow p-4">
         <h2 className="text-lg font-semibold mb-4 text-gray-800">Job Filters</h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -141,7 +144,7 @@ const AvailableJobsPage = () => {
         </div>
       </div>
 
-      {/* Jobs List */}
+      
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 border-b border-gray-200 flex items-center">
           <TruckIcon size={24} className="mr-3 text-green-600" />

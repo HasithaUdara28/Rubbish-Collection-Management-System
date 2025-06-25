@@ -11,12 +11,14 @@ import ServicesPage from './pages/ServicesPage'
 import PostJobPage from './pages/PostJobPage'
 import PaymentPage from './pages/PaymentPage'
 import AdminPanel from './pages/AdminPanel'
+import LandingPage from './pages/LandingPage'
+import AdminLogin from './pages/AdminLogin'
 
 const App = () => {
   return (
     <Routes>
       <Route path='/home' element={<Home/>}/>
-      <Route path='/' element={<Login/>}/>
+      <Route path='/customerlogin' element={<Login/>}/>
       <Route path='/register' element={<Register/>}/>
       <Route path='/driverRegister' element={<DriverRegister/>}/>
       <Route path='/driverlogin' element={<DriverLogin/>}/>
@@ -26,6 +28,8 @@ const App = () => {
       <Route path='/postjob' element={<PostJobPage/>}/>
       <Route path='/payment' element={<PaymentPage/>}/>
       <Route path='/admin-panel' element={<AdminPanel/>}/>
+      <Route path='/' element={<LandingPage/>}/>
+      <Route path='/AdminLogin' element={<AdminLogin/>}/>
     </Routes>
   )
 }

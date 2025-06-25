@@ -60,15 +60,15 @@ router.post('/create', authenticateToken, async (req, res) => {
         switch(service) {
             case "Half Truck":
                 durationHours = 2;
-                pricePerHour = 50; // Example price
+                pricePerHour = 40; 
                 break;
             case "Full Truck":
                 durationHours = 5;
-                pricePerHour = 45; // Example price
+                pricePerHour = 30; 
                 break;
             case "More Than Truck":
                 durationHours = 8;
-                pricePerHour = 40; // Example price
+                pricePerHour = 35; 
                 break;
         }
 
@@ -79,7 +79,7 @@ router.post('/create', authenticateToken, async (req, res) => {
         // Calculate total price
         const totalPrice = durationHours * pricePerHour;
 
-        // Check if driver is available (general availability flag)
+        
         if (!driver.availability) {
             return res.status(400).json({ message: 'Driver is not currently available for bookings' });
         }
@@ -112,7 +112,7 @@ router.post('/create', authenticateToken, async (req, res) => {
     }
 });
 
-// Get customer's bookings
+
 router.get('/my-bookings', authenticateToken, async (req, res) => {
     try {
         const customerId = req.user.id;
@@ -128,7 +128,7 @@ router.get('/my-bookings', authenticateToken, async (req, res) => {
     }
 });
 
-// Get single booking details
+
 router.get('/:id', authenticateToken, async (req, res) => {
     try {
         const bookingId = req.params.id;
@@ -149,7 +149,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Cancel booking
+
 router.put('/:id/cancel', authenticateToken, async (req, res) => {
     try {
         const bookingId = req.params.id;
@@ -161,19 +161,19 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
         
-        // Only allow cancellation if booking is pending or confirmed
+        
         if (booking.status !== 'pending' && booking.status !== 'confirmed') {
             return res.status(400).json({ 
                 message: 'Cannot cancel booking that is already completed or cancelled' 
             });
         }
 
-        // Calculate time difference between now and the booking start time
+        
         const now = new Date();
         const bookingTime = new Date(booking.startTime);
         const hoursDifference = (bookingTime - now) / (1000 * 60 * 60);
         
-        // Only allow cancellation if booking is more than 8 hours away
+        
         if (hoursDifference < 8) {
             return res.status(400).json({ 
                 message: 'Bookings can only be cancelled at least 8 hours before the scheduled time' 
@@ -190,7 +190,7 @@ router.put('/:id/cancel', authenticateToken, async (req, res) => {
     }
 });
 
-// Get driver availability slots
+
 router.get('/driver/:id/availability', async (req, res) => {
     try {
         const { date } = req.query;
@@ -205,18 +205,18 @@ router.get('/driver/:id/availability', async (req, res) => {
             return res.status(404).json({ message: 'Driver not found' });
         }
         
-        // Find all booked slots for that day
+       
         const queryDate = new Date(date);
         const bookedSlots = driver.timeSlots.filter(slot => {
             const slotDate = new Date(slot.date);
             return slotDate.toISOString().split('T')[0] === queryDate.toISOString().split('T')[0] && slot.isBooked;
         });
         
-        // Get the day of week
+        
         const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const dayOfWeek = days[queryDate.getDay()];
         
-        // Find driver's schedule for that day
+        
         const daySchedule = driver.weeklySchedule.find(schedule => schedule.day === dayOfWeek);
         
         if (!daySchedule) {
@@ -227,7 +227,7 @@ router.get('/driver/:id/availability', async (req, res) => {
             });
         }
         
-        // Generate available slots based on driver's schedule and booked slots
+        
         const [startHour, startMinute] = daySchedule.startTime.split(':').map(Number);
         const [endHour, endMinute] = daySchedule.endTime.split(':').map(Number);
         
@@ -237,7 +237,7 @@ router.get('/driver/:id/availability', async (req, res) => {
         const endOfDay = new Date(queryDate);
         endOfDay.setHours(endHour, endMinute, 0, 0);
         
-        // Create slots every 30 minutes
+        
         const availableSlots = [];
         const currentSlot = new Date(startOfDay);
         
@@ -264,7 +264,7 @@ router.get('/driver/:id/availability', async (req, res) => {
                 });
             }
             
-            // Move to next slot
+           
             currentSlot.setMinutes(currentSlot.getMinutes() + 30);
         }
         
@@ -288,10 +288,10 @@ router.get('/driver/:driverId', authenticateToken, async (req, res) => {
     try {
       const { driverId } = req.params;
       
-      // Find all bookings for this driver
+      
       const bookings = await Booking.find({ 
         driverId,
-        // Optionally limit to recent and upcoming bookings
+        
         date: { $gte: new Date(new Date().setDate(new Date().getDate() - 7)) }
       });
       
@@ -302,30 +302,30 @@ router.get('/driver/:driverId', authenticateToken, async (req, res) => {
     }
   });
 
-  // Updated route to get driver bookings filtered by service
+ 
 router.get('/driver/:driverId/services', authenticateToken, async (req, res) => {
     try {
         const { driverId } = req.params;
-        const { service } = req.query; // Optional service filter
+        const { service } = req.query; 
 
-        // Base query for driver's bookings
+        
         const query = { 
             driverId,
-            // Optionally limit to recent and upcoming bookings
+            
             date: { $gte: new Date(new Date().setDate(new Date().getDate() - 30)) }
         };
 
-        // Add service filter if provided
+        
         if (service) {
             query.service = service;
         }
 
-        // Find bookings with optional service filtering
+        
         const bookings = await Booking.find(query)
-            .populate('customerId', 'name email') // Optionally populate customer details
-            .sort({ date: 1 }); // Sort by date ascending
+            .populate('customerId', 'name email') 
+            .sort({ date: 1 }); 
 
-        // Group bookings by service if no specific service was requested
+       
         if (!service) {
             const groupedBookings = bookings.reduce((acc, booking) => {
                 if (!acc[booking.service]) {
@@ -341,7 +341,7 @@ router.get('/driver/:driverId/services', authenticateToken, async (req, res) => 
             });
         }
 
-        // If a specific service was requested, return those bookings
+        
         res.status(200).json({
             service,
             totalBookings: bookings.length,
@@ -356,9 +356,9 @@ router.get('/driver/:driverId/services', authenticateToken, async (req, res) => 
 router.put('/:id/reject', authenticateToken, async (req, res) => {
     try {
         const bookingId = req.params.id;
-        const driverId = req.user.id; // Get driver ID from authentication
+        const driverId = req.user.id; 
 
-        // Find the booking
+        
         const booking = await Booking.findOne({ 
             _id: bookingId, 
             driverId 
@@ -368,14 +368,14 @@ router.put('/:id/reject', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        // Only allow rejection of pending bookings
+        
         if (booking.status !== 'pending') {
             return res.status(400).json({ 
                 message: 'Only pending bookings can be rejected' 
             });
         }
 
-        // Update the booking status to cancelled instead of deleting
+        
         booking.status = 'cancelled';
         await booking.save();
 
@@ -388,13 +388,13 @@ router.put('/:id/reject', authenticateToken, async (req, res) => {
     }
 });
 
-// Add a route to confirm booking
+
 router.put('/:id/confirm', authenticateToken, async (req, res) => {
     try {
         const bookingId = req.params.id;
         const driverId = req.user.id;
 
-        // Find the booking
+       
         const booking = await Booking.findOne({ 
             _id: bookingId, 
             driverId 
@@ -404,14 +404,14 @@ router.put('/:id/confirm', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        // Only allow confirmation of pending bookings
+        
         if (booking.status !== 'pending') {
             return res.status(400).json({ 
                 message: 'Only pending bookings can be confirmed' 
             });
         }
 
-        // Update booking status
+        
         booking.status = 'confirmed';
         await booking.save();
 
@@ -430,7 +430,7 @@ router.put('/:id/complete', authenticateToken, async (req, res) => {
         const bookingId = req.params.id;
         const driverId = req.user.id;
 
-        // Find the booking
+       
         const booking = await Booking.findOne({ 
             _id: bookingId, 
             driverId 
@@ -440,14 +440,14 @@ router.put('/:id/complete', authenticateToken, async (req, res) => {
             return res.status(404).json({ message: 'Booking not found' });
         }
 
-        // Only allow completing bookings that are confirmed
+        
         if (booking.status !== 'confirmed') {
             return res.status(400).json({ 
                 message: 'Only confirmed bookings can be marked as completed' 
             });
         }
 
-        // Update booking status
+        
         booking.status = 'completed';
         await booking.save();
 
@@ -460,4 +460,5 @@ router.put('/:id/complete', authenticateToken, async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 });
+
 export default router;

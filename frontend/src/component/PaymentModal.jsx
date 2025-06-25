@@ -28,7 +28,7 @@ const PaymentModal = ({ job, onClose, onPaymentComplete }) => {
         }
       );
 
-      // Handle successful payment
+      
       onPaymentComplete(response.data);
     } catch (err) {
       console.error('Payment error:', err);
@@ -40,7 +40,7 @@ const PaymentModal = ({ job, onClose, onPaymentComplete }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-        {/* Modal Header */}
+        
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">Pay for Job</h2>
           <button 
@@ -51,7 +51,7 @@ const PaymentModal = ({ job, onClose, onPaymentComplete }) => {
           </button>
         </div>
 
-        {/* Payment Details */}
+        
         <div className="p-6">
           <div className="mb-4">
             <p className="text-sm text-gray-600">Job</p>
@@ -65,7 +65,7 @@ const PaymentModal = ({ job, onClose, onPaymentComplete }) => {
             </p>
           </div>
 
-          {/* Payment Method Selection */}
+          
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Select Payment Method
@@ -86,9 +86,9 @@ const PaymentModal = ({ job, onClose, onPaymentComplete }) => {
                 <input 
                   type="radio" 
                   name="paymentMethod" 
-                  value="paypal"
-                  checked={paymentMethod === 'paypal'}
-                  onChange={() => setPaymentMethod('paypal')}
+                  value="stripe"
+                  checked={paymentMethod === 'stripe'}
+                  onChange={() => setPaymentMethod('stripe')}
                   className="form-radio"
                 />
                 <span>PayPal</span>
@@ -96,14 +96,14 @@ const PaymentModal = ({ job, onClose, onPaymentComplete }) => {
             </div>
           </div>
 
-          {/* Error Message */}
+          
           {error && (
             <div className="mb-4 text-center text-red-500">
               {error}
             </div>
           )}
 
-          {/* Action Buttons */}
+          
           <div className="flex justify-end space-x-4">
             <button 
               onClick={onClose}

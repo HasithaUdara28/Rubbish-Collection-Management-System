@@ -15,26 +15,26 @@ const PostJobPage = () => {
   const [success, setSuccess] = useState(null);
   const [userDetails, setUserDetails] = useState(null);
 
-  // Check authentication on component mount
+  
   useEffect(() => {
     const token = sessionStorage.getItem("token");
   
     if (!token) {
-      // If no token is found, redirect to login
+      
       navigate("/");
     } else {
       try {
-        // Decode the token to extract user details
+        
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
         setUserDetails(decodedToken);
       } catch (error) {
         console.error("Error decoding token:", error);
-        navigate("/"); // Redirect to login on error
+        navigate("/"); 
       }
     }
   }, [navigate]);
 
-  // Predefined job type options
+  
   const jobTypes = [
     { value: 'More Than Truck', label: 'More Than Truck - Large Moving' },
     { value: 'Full Truck', label: 'Full Truck - Complete Truck Rental' },
@@ -49,7 +49,7 @@ const PostJobPage = () => {
     setError(null);
     setSuccess(null);
 
-    // Get token from session storage
+    
     const token = sessionStorage.getItem("token");
 
     if (!token) {
@@ -59,7 +59,7 @@ const PostJobPage = () => {
       return;
     }
 
-    // Validate pickup time is in the future
+    
     const selectedTime = new Date(pickupTime);
     const currentTime = new Date();
     
@@ -76,7 +76,7 @@ const PostJobPage = () => {
         pickupTime,
         description,
         estimatedPrice: estimatedPrice ? parseFloat(estimatedPrice) : null,
-        userId: userDetails?.id // Add user ID from decoded token
+        userId: userDetails?.id 
       };
 
       const response = await axios.post(
@@ -92,28 +92,28 @@ const PostJobPage = () => {
 
       setSuccess('Job posted successfully!');
       
-      // Reset form
+     
       setJobType('');
       setPickupLocation('');
       setPickupTime('');
       setDescription('');
       setEstimatedPrice('');
     } catch (err) {
-      // Detailed error logging
+      
       console.error('Full error object:', err);
       
       if (err.response) {
-        // The request was made and the server responded with a status code
+        
         console.error('Server responded with error:', err.response.data);
         console.error('Status code:', err.response.status);
         
         setError(err.response.data.message || 'Failed to post job. Check server logs.');
       } else if (err.request) {
-        // The request was made but no response was received
+        
         console.error('No response received:', err.request);
         setError('No response from server. Check network connection.');
       } else {
-        // Something happened in setting up the request
+        
         console.error('Error setting up request:', err.message);
         setError('An unexpected error occurred. Please try again.');
       }
@@ -130,7 +130,7 @@ const PostJobPage = () => {
       </div>
 
       <form onSubmit={handleSubmitJob} className="space-y-6">
-        {/* Job Type Selection */}
+        
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Select Job Type
@@ -154,7 +154,7 @@ const PostJobPage = () => {
           </div>
         </div>
 
-        {/* Pickup Location */}
+        
         <div>
           <label htmlFor="pickupLocation" className="block text-sm font-medium text-gray-700 mb-2">
             Pickup Location
@@ -175,7 +175,7 @@ const PostJobPage = () => {
           </div>
         </div>
 
-        {/* Pickup Time */}
+        
         <div>
           <label htmlFor="pickupTime" className="block text-sm font-medium text-gray-700 mb-2">
             Pickup Time
@@ -198,7 +198,7 @@ const PostJobPage = () => {
           </p>
         </div>
 
-        {/* Job Description */}
+        
         <div>
           <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
             Job Description
@@ -218,7 +218,7 @@ const PostJobPage = () => {
           </div>
         </div>
 
-        {/* Estimated Price */}
+        
         <div>
           <label htmlFor="estimatedPrice" className="block text-sm font-medium text-gray-700 mb-2">
             Estimated Price 
@@ -240,7 +240,7 @@ const PostJobPage = () => {
           </div>
         </div>
 
-        {/* Error and Success Messages */}
+        
         {error && (
           <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-md">
             {error}
@@ -252,7 +252,7 @@ const PostJobPage = () => {
           </div>
         )}
 
-        {/* Submit Button */}
+        
         <div>
           <button
             type="submit"

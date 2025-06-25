@@ -34,10 +34,10 @@ const DriverSelectionModal = ({ job, appliedDrivers, onClose, onDriverSelect }) 
         }
       );
 
-      // Notify parent component of successful selection
+      
       onDriverSelect(response.data.job);
       
-      // Close the modal
+      
       onClose();
     } catch (err) {
       console.error('Driver selection error:', err);
@@ -62,7 +62,7 @@ const DriverSelectionModal = ({ job, appliedDrivers, onClose, onDriverSelect }) 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* Modal Header */}
+        
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800">Select a Driver</h2>
           <button 
@@ -73,7 +73,7 @@ const DriverSelectionModal = ({ job, appliedDrivers, onClose, onDriverSelect }) 
           </button>
         </div>
 
-        {/* Drivers List */}
+        
         <div className="p-6">
           {appliedDrivers.length === 0 ? (
             <div className="text-center text-gray-500">
@@ -119,14 +119,14 @@ const DriverSelectionModal = ({ job, appliedDrivers, onClose, onDriverSelect }) 
             </div>
           )}
 
-          {/* Error Message */}
+          
           {error && (
             <div className="mt-4 text-center text-red-500">
               {error}
             </div>
           )}
 
-          {/* Action Buttons */}
+          
           <div className="mt-6 flex justify-end space-x-4">
             <button 
               onClick={onClose}

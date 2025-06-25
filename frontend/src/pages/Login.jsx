@@ -37,7 +37,7 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
       <div className="flex w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden h-[600px] relative">
-        {/* Left Side - Image/Brand Section */}
+        
         <div className="hidden md:block w-2/5 bg-green-600 text-white p-12 relative">
           <div className="absolute top-0 left-0 w-full h-full opacity-10">
             <img src="bgimg.png" alt="Background Pattern" className="w-full h-full object-cover" />
@@ -58,7 +58,7 @@ const Login = () => {
           </div>
         </div>
 
-        {/* Right Side - Login Form */}
+        
         <div className="w-full md:w-3/5 bg-white p-12 flex flex-col justify-center">
           <div className="max-w-sm mx-auto w-full">
             <div className="md:hidden mb-8 text-center">

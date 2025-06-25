@@ -11,7 +11,7 @@ const DriverDashboard = () => {
   const [upcomingJobs, setUpcomingJobs] = useState([]);
   const [availableJobs, setAvailableJobs] = useState([]);
   const [completedBookings, setCompletedBookings] = useState([]);
-  const [cancelledBookings, setCancelledBookings] = useState([]); // New state for cancelled bookings
+  const [cancelledBookings, setCancelledBookings] = useState([]); 
   const navigate = useNavigate();
 
   
@@ -33,23 +33,23 @@ const DriverDashboard = () => {
     .then(bookings => {
       const now = new Date();
       
-      // Filter upcoming bookings (pending or confirmed)
+      
       const upcoming = bookings.filter(job => 
         new Date(job.startTime) > now && 
         (job.status === 'pending' || job.status === 'confirmed')
       );
   
-      // Filter completed bookings
+      
       const completed = bookings.filter(job => 
         job.status === 'completed'
       );
   
-      // Filter cancelled bookings
+      
       const cancelled = bookings.filter(job => 
         job.status === 'cancelled' || job.status === 'rejected'
       );
   
-      // Process upcoming jobs
+      
       setUpcomingJobs(upcoming.map(job => ({
         id: job._id,
         service: job.service,
@@ -59,8 +59,8 @@ const DriverDashboard = () => {
         address: job.location,
         status: job.status === 'pending' ? 'Pending' : 'Confirmed'
       })));
+      console.log(upcoming);
       
-      // Process completed jobs
       setCompletedBookings(completed.map(job => ({
         id: job._id,
         service: job.service,
@@ -71,7 +71,7 @@ const DriverDashboard = () => {
         totalPrice: job.totalPrice || 0
       })));
 
-      // Process cancelled jobs
+      
       setCancelledBookings(cancelled.map(job => ({
         id: job._id,
         service: job.service,
@@ -98,7 +98,7 @@ const DriverDashboard = () => {
         const decodedToken = JSON.parse(atob(token.split(".")[1]));
         setUserDetails(decodedToken);
         
-        // Fetch driver availability
+        
         fetch(`http://localhost:5555/drivers/drivers/${decodedToken.id}`)
           .then(response => {
             if (!response.ok) {
@@ -113,7 +113,7 @@ const DriverDashboard = () => {
             console.error("Error fetching driver details:", error);
           });
 
-        // Fetch driver bookings
+        
         fetchDriverBookings();
 
       } catch (error) {
@@ -123,7 +123,7 @@ const DriverDashboard = () => {
     }
   }, [navigate]);
 
-  // Booking action handlers
+  
   const handleBookingConfirm = (bookingId) => {
     const token = sessionStorage.getItem("token");
 
@@ -141,7 +141,7 @@ const DriverDashboard = () => {
       return response.json();
     })
     .then(() => {
-      // Refresh bookings after confirmation
+      
       fetchDriverBookings();
     })
     .catch(error => {
@@ -167,7 +167,7 @@ const DriverDashboard = () => {
       return response.json();
     })
     .then(() => {
-      // Refresh bookings after rejection
+      
       fetchDriverBookings();
     })
     .catch(error => {
@@ -176,7 +176,7 @@ const DriverDashboard = () => {
     });
   };
   
-  // New handler to mark booking as completed
+  
   const handleBookingComplete = (bookingId) => {
     const token = sessionStorage.getItem("token");
 
@@ -194,7 +194,7 @@ const DriverDashboard = () => {
       return response.json();
     })
     .then(() => {
-      // Refresh bookings after marking as completed
+      
       fetchDriverBookings();
     })
     .catch(error => {
@@ -206,16 +206,16 @@ const DriverDashboard = () => {
 
   const handleAvailabilityToggle = async () => {
     const newAvailability = !isAvailable;
-    setIsAvailable(newAvailability); // Optimistically update UI
+    setIsAvailable(newAvailability); 
   
     try {
-      // Fix the endpoint to match your route definition
+      
       const response = await fetch(`http://localhost:5555/drivers/drivers/${userDetails.id}/availability`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        // Use 'availability' to match your model's property name
+        
         body: JSON.stringify({ availability: newAvailability }),
       });
   
@@ -227,15 +227,19 @@ const DriverDashboard = () => {
       console.log("Availability updated:", data);
     } catch (error) {
       console.error("Error updating availability:", error);
-      setIsAvailable(!newAvailability); // Revert if failed
+      setIsAvailable(!newAvailability); 
     }
   };
 
-  
+  const handleLogout = () => {
+    
+    sessionStorage.removeItem("token");
+    navigate("/");
+  };
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+      
       <div className="w-64 bg-white border-r border-gray-200">
         <div className="p-4 bg-green-600">
           <h2 className="text-2xl font-bold text-white">EcoCollect</h2>
@@ -309,14 +313,17 @@ const DriverDashboard = () => {
         </div>
         
         <div className="absolute bottom-0 left-0 p-4 w-64">
-          <button className="flex items-center text-gray-700 hover:text-red-600">
-            <LogOut size={18} className="mr-2" />
-            Logout
-          </button>
-        </div>
+                  <button 
+                    onClick={handleLogout}
+                    className="flex items-center text-gray-700 hover:text-red-600"
+                  >
+                    <LogOut size={18} className="mr-2" />
+                    Logout
+                  </button>
+                </div>
       </div>
       
-      {/* Main Content */}
+      
       <div className="flex-1 overflow-auto">
         <header className="bg-white border-b border-gray-200 p-4 flex justify-between items-center">
           <h1 className="text-xl font-semibold text-gray-800">Driver Dashboard</h1>
@@ -378,7 +385,7 @@ const DriverDashboard = () => {
               
               <div className="bg-white rounded-lg shadow mb-6">
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-medium text-gray-800">Jobs</h2>
+        <h2 className="text-lg font-medium text-gray-800">Bookings</h2>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
@@ -471,7 +478,6 @@ const DriverDashboard = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -493,11 +499,6 @@ const DriverDashboard = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-gray-900">${booking.totalPrice}</span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button className="text-blue-600 hover:text-blue-900">
-                              View Details
-                            </button>
-                          </td>
                         </tr>
                       ))}
                       {completedBookings.length === 0 && (
@@ -512,7 +513,7 @@ const DriverDashboard = () => {
                 </div>
               </div>
 
-              {/* Cancelled Bookings Section */}
+              
               <div className="bg-white rounded-lg shadow">
                 <div className="p-4 border-b border-gray-200">
                   <h2 className="text-lg font-medium text-gray-800">Cancelled Bookings</h2>
@@ -527,7 +528,6 @@ const DriverDashboard = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -558,11 +558,6 @@ const DriverDashboard = () => {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className="text-gray-900">{booking.reason}</span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button className="text-blue-600 hover:text-blue-900">
-                              View Details
-                            </button>
-                          </td>
                         </tr>
                       ))}
                       {cancelledBookings.length === 0 && (
@@ -579,7 +574,7 @@ const DriverDashboard = () => {
             </>
           )}
           
-          {/* Other tab content would go here */}
+          
           {activeTab === 'schedule' && <DriverJobs />}
           {activeTab === 'jobs' && <AvailableJobsPage />}
           {activeTab === 'earnings' && <div><h2 className="text-xl font-semibold mb-4">Earnings</h2></div>}

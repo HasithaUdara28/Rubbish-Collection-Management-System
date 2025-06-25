@@ -71,7 +71,7 @@ const DriverRegister = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl w-full bg-white rounded-2xl shadow-xl overflow-hidden">
         <div className="flex flex-col md:flex-row">
-          {/* Left Side - Brand Info */}
+          
           <div className="bg-green-600 text-white md:w-1/3 p-8 flex flex-col justify-between">
             <div>
               <h1 className="text-3xl font-bold mb-6">ECOCOLLECT</h1>
@@ -108,7 +108,7 @@ const DriverRegister = () => {
             </div>
           </div>
 
-          {/* Right Side - Registration Form */}
+          
           <div className="md:w-2/3 p-8">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800">Driver Registration</h2>

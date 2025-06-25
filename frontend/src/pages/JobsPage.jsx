@@ -58,7 +58,7 @@ const JobsPage = () => {
     setSelectedJob(job);
   };
 
-  // If loading, show a loading state
+  
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -70,7 +70,7 @@ const JobsPage = () => {
     );
   }
 
-  // If error, show error message
+  
   if (error) {
     return (
       <div className="flex items-center justify-center h-screen">

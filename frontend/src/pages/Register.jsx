@@ -25,11 +25,11 @@ const Register = () => {
       const response = await axios.post("http://localhost:5555/user/register", { name, email, phone, password, role });
       const token = response.data.token;
 
-      // Storing token in sessionStorage
+      
       sessionStorage.setItem("token", token);
 
-      // Redirect to home page after successful registration
-      navigate("/");
+      
+      navigate("/customerlogin");
     } catch (error) {
       setErrorMessage(error.response?.data?.message || "Registration failed. Please try again.");
       console.error(error.response?.data?.message);
@@ -41,7 +41,7 @@ const Register = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
       <div className="flex w-full max-w-4xl rounded-xl shadow-2xl overflow-hidden h-[700px] relative">
-        {/* Left Side - Image/Brand Section */}
+        
         <div className="hidden md:block w-2/5 bg-green-600 text-white p-12 relative">
           <div className="absolute top-0 left-0 w-full h-full opacity-10">
             <img src="bgimg.png" alt="Background Pattern" className="w-full h-full object-cover" />
@@ -62,7 +62,7 @@ const Register = () => {
           </div>
         </div>
 
-        {/* Right Side - Register Form */}
+        
         <div className="w-full md:w-3/5 bg-white p-12 flex flex-col justify-center">
           <div className="max-w-sm mx-auto w-full">
             <div className="md:hidden mb-8 text-center">
@@ -191,7 +191,7 @@ const Register = () => {
             
             <p className="mt-8 text-center text-sm text-gray-600">
               Already have an account?{" "}
-              <a href="/" className="font-medium text-green-600 hover:text-green-500">
+              <a href="/customerlogin" className="font-medium text-green-600 hover:text-green-500">
                 Sign in instead
               </a>
             </p>
